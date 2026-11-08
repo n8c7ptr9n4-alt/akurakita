@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="ja"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>安倉北ガイド</title>
+<meta name="description" content="宝塚市安倉北を中心に、半径1.5kmのお店・施設・行事をまとめた暮らしのガイド。">
+<meta name="theme-color" content="#ccecf0">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="安倉北ガイド"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="leaflet.css">
+<style>/* ===== スマホ用の操作画面（元のガイドブックの上にかぶせる） ===== */
+:root{--a-bg:#fff9ef;--a-card:#fff;--a-ink:#233f4d;--a-muted:#5d7380;--a-line:#dfe8ea;--a-accent:#23657b;--a-sun:#ffcd75;--a-sky:#ccecf0;--a-red:#c0483a;--tab-h:64px}
+html.big{font-size:18.5px}
+[hidden]{display:none!important}
+html{scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))!important}
+body.app{padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom,0px));background:var(--a-bg)}
+.view{min-height:60vh}
+.app-top{position:sticky;top:0;z-index:40;background:var(--a-sky);border-bottom:1px solid #b6dde3;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;display:flex;align-items:center;gap:10px}
+.app-top h1{margin:0;font-size:1.05rem;flex:1;color:var(--a-ink);letter-spacing:.02em;line-height:1.4}
+.app-top button{min-height:40px;padding:4px 10px;border-radius:10px;border:1px solid #9cc7cf;background:#fff;color:var(--a-ink);font-size:.85rem}
+.wrap{max-width:720px;margin:0 auto;padding:14px 14px 28px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid var(--a-line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -4px 16px #0000000f}
+.tabs button{border:0;background:none;border-radius:0;min-height:var(--tab-h);padding:6px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--a-muted);font-size:.72rem;font-weight:700}
+.tabs button .ic{font-size:1.35rem;line-height:1}
+.tabs button[aria-current="page"]{color:var(--a-accent);background:#eef7f8}
+.hello{margin:4px 0 14px}
+.hello b{font-size:1.25rem;color:var(--a-ink);display:block;line-height:1.5}
+.hello span{color:var(--a-muted);font-size:.9rem}
+.sec-title{font-size:1rem;margin:22px 0 10px;color:var(--a-ink);display:flex;align-items:center;gap:8px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:92px;padding:10px 4px;border-radius:16px;border:1px solid var(--a-line);background:#fff;color:var(--a-ink);font-weight:700;font-size:.85rem;line-height:1.35;text-align:center;box-shadow:0 2px 0 #e5ecee}
+.tile .em{font-size:1.8rem;line-height:1}
+.tile small{font-weight:400;color:var(--a-muted);font-size:.72rem}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick button,.quick a{min-height:56px;border-radius:14px;border:1px solid var(--a-line);background:#fff;color:var(--a-ink);font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:8px;padding:8px 12px;text-decoration:none;text-align:left;line-height:1.4}
+.quick .em{font-size:1.4rem}
+.quick .sos{background:#fff1ee;border-color:#f1c7bf;color:var(--a-red)}
+.card{background:#fff;border:1px solid var(--a-line);border-radius:16px;padding:14px;margin:0 0 10px;box-shadow:0 2px 0 #eef2f3}
+.fcard h3{margin:0;font-size:1.02rem;line-height:1.5;color:var(--a-ink);display:flex;gap:8px;align-items:flex-start}
+.fcard h3 .nm{flex:1}
+.chip{display:inline-block;font-size:.72rem;padding:2px 9px;border-radius:20px;background:#eef5f6;color:var(--a-accent);font-weight:700;margin:6px 6px 0 0;line-height:1.6}
+.chip.warn{background:#fff4dc;color:#8a5a00}
+.fcard .addr{font-size:.86rem;color:var(--a-muted);margin:6px 0 0}
+.fcard .note{font-size:.88rem;margin:6px 0 0;line-height:1.7}
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.acts a,.acts button{min-height:44px;border-radius:12px;border:1px solid #9cc7cf;background:#fff;color:var(--a-accent);font-size:.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:4px;text-align:center;line-height:1.3}
+.acts .primary{background:var(--a-accent);border-color:var(--a-accent);color:#fff}
+.star{border:0;background:none;font-size:1.5rem;line-height:1;min-height:40px;min-width:40px;padding:0;color:#d39a1f}
+.searchbar{position:sticky;top:calc(56px + env(safe-area-inset-top,0px));z-index:30;background:var(--a-bg);padding:8px 0 6px}
+.searchbar input{width:100%;min-height:48px;border-radius:14px;border:1px solid #a9c4ca;padding:10px 14px;font-size:1rem;background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.chips button{min-height:40px;border-radius:20px;border:1px solid #b9d3d8;background:#fff;color:var(--a-ink);padding:4px 13px;font-size:.84rem;font-weight:700;line-height:1.3}
+.chips button[aria-pressed="true"]{background:var(--a-accent);border-color:var(--a-accent);color:#fff}
+.count{font-size:.85rem;color:var(--a-muted);margin:8px 0}
+.more-g{display:block;text-align:center;margin:6px 0 14px;padding:12px;border-radius:14px;border:1px dashed #9cc7cf;color:var(--a-accent);font-weight:700;text-decoration:none;font-size:.9rem;background:#fff}
+.empty{color:var(--a-muted);text-align:center;padding:30px 0}
+/* 地図 */
+#mapView .wrap{padding-top:8px}
+#map{position:relative;z-index:0;isolation:isolate;height:calc(100vh - 250px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:340px;border-radius:16px;border:1px solid var(--a-line);overflow:hidden;background:#e9eef0}
+.mapbar{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.mapbar button{min-height:40px;border-radius:12px;border:1px solid #9cc7cf;background:#fff;color:var(--a-accent);font-weight:700;font-size:.82rem;padding:4px 12px}
+.mapnote{font-size:.78rem;color:var(--a-muted);line-height:1.6;margin:6px 0}
+.pin{width:34px;height:34px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px #0004}
+.pin span{transform:rotate(45deg);font-size:17px;line-height:1}
+.pin.station{border-radius:10px;transform:none;background:#233f4d;width:auto;padding:0 8px;color:#fff;font-weight:700;font-size:12px;white-space:nowrap}
+.pin.station span{transform:none;font-size:12px}
+.pin.me{width:18px;height:18px;border-radius:50%;transform:none;background:#2b7de9;border:3px solid #fff}
+.leaflet-popup-content{margin:12px 14px;font-family:inherit;font-size:.9rem;line-height:1.6;min-width:200px}
+.leaflet-popup-content b{font-size:1rem;color:var(--a-ink)}
+.pop-acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.pop-acts a{flex:1;min-width:84px;text-align:center;border-radius:10px;padding:8px 6px;border:1px solid #9cc7cf;color:var(--a-accent)!important;text-decoration:none;font-weight:700;font-size:.8rem}
+.pop-acts a.primary{background:var(--a-accent);color:#fff!important}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.78rem;color:var(--a-muted);margin:6px 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+/* 行事カレンダー */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 8px}
+.cal-head b{font-size:1.15rem;color:var(--a-ink)}
+.cal-head button{min-height:44px;min-width:44px;border-radius:12px;border:1px solid #9cc7cf;background:#fff;color:var(--a-accent);font-size:1.1rem;padding:0 10px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;background:#fff;border:1px solid var(--a-line);border-radius:16px;padding:8px}
+.cal .dow{text-align:center;font-size:.72rem;color:var(--a-muted);font-weight:700;padding:2px 0}
+.cal .dow.sun,.cal .d.sun .n{color:#c0483a}.cal .dow.sat,.cal .d.sat .n{color:#2b6cb0}
+.cal .d{min-height:50px;border:0;border-radius:10px;background:none;padding:3px 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.85rem;color:var(--a-ink);min-width:0}
+.cal .d.out{opacity:.35}
+.cal .d.today .n{background:var(--a-sun);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.cal .d.sel{background:#e3f2f4;outline:2px solid var(--a-accent)}
+.cal .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:100%}
+.cal .dots i{width:7px;height:7px;border-radius:50%;background:var(--a-accent)}
+.cal .dots i.mine{background:#d0752f}
+.ev{display:flex;gap:12px;align-items:flex-start}
+.ev .date{flex:none;width:54px;text-align:center;background:#eef7f8;border-radius:12px;padding:6px 0;color:var(--a-ink);line-height:1.3}
+.ev .date b{display:block;font-size:1.2rem}
+.ev .date small{font-size:.7rem;color:var(--a-muted)}
+.ev .body{flex:1;min-width:0}
+.ev h3{margin:0;font-size:1rem;line-height:1.5;color:var(--a-ink)}
+.ev p{margin:4px 0 0;font-size:.86rem;line-height:1.7}
+.ev .acts{grid-template-columns:repeat(2,1fr)}
+.st{font-size:.7rem;padding:1px 8px;border-radius:20px;font-weight:700;margin-left:4px;vertical-align:2px;white-space:nowrap}
+.st.確定{background:#e3f4e4;color:#246b2c}.st.例年{background:#eef5f6;color:var(--a-accent)}.st.目安{background:#fff4dc;color:#8a5a00}.st.じぶん{background:#fde9dc;color:#a24d16}
+.addbtn{width:100%;min-height:52px;border-radius:14px;border:0;background:var(--a-accent);color:#fff;font-weight:700;font-size:1rem;margin:12px 0}
+.links a{display:block;padding:12px 4px;border-bottom:1px solid var(--a-line);color:var(--a-accent);font-weight:700;text-decoration:none;font-size:.92rem}
+/* シート（入力画面） */
+.sheet-bg{position:fixed;inset:0;background:#0006;z-index:80;display:flex;align-items:flex-end}
+.sheet{background:#fff;width:100%;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet h2{margin:0 0 12px;font-size:1.1rem}
+.sheet label{display:block;font-size:.85rem;font-weight:700;color:var(--a-ink);margin:10px 0 4px}
+.sheet input,.sheet textarea{width:100%;min-height:46px;border-radius:12px;border:1px solid #a9c4ca;padding:10px;font-size:1rem;font-family:inherit;background:#fff}
+.sheet .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet .btns{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:16px}
+.sheet .btns button{min-height:50px;border-radius:14px;font-weight:700;font-size:.95rem}
+.sheet .btns .ok{background:var(--a-accent);color:#fff;border:0}
+.sheet .del{width:100%;margin-top:10px;min-height:44px;border-radius:12px;border:1px solid #f1c7bf;background:#fff;color:var(--a-red);font-weight:700}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tab-h) + 16px + env(safe-area-inset-bottom,0px));background:var(--a-ink);color:#fff;padding:10px 18px;border-radius:30px;font-size:.88rem;z-index:90;max-width:90vw}
+/* ガイドブック（元の本文）：表を縦に並べて横スクロールをなくす */
+#bookView .pwa-tip{display:none}
+@media (max-width:760px){
+  #bookView .table-wrap{overflow:visible!important;border:0!important}
+  #bookView table,#bookView thead,#bookView tbody,#bookView tr,#bookView th,#bookView td{display:block;width:auto!important;min-width:0!important}
+  #bookView table{border:0;min-width:0!important}
+  #bookView thead{display:none}
+  #bookView tr{border:1px solid var(--line,#d5e3e6);border-radius:12px;margin:0 0 10px;padding:8px 12px;background:#fff}
+  #bookView td,#bookView tbody th{border:0!important;padding:4px 0!important;text-align:left}
+  #bookView td[data-label]::before,#bookView tbody th[data-label]::before{content:attr(data-label);display:block;font-size:.72rem;font-weight:700;color:#5d7380;letter-spacing:.04em}
+  #bookView img,#bookView svg,#bookView video{max-width:100%;height:auto}
+  #bookView pre,#bookView code{white-space:pre-wrap;word-break:break-word}
+}
+#bookView{overflow-x:hidden}
+
+.bigsel{width:100%;min-height:50px;border-radius:14px;border:1px solid #a9c4ca;background:#fff;padding:8px 12px;font-size:1rem;font-weight:700;color:var(--a-ink);-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#23657b 50%),linear-gradient(135deg,#23657b 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat}
+
+#famChips{display:none!important}
+.gbook .card h2{font-size:1.1rem;margin:0 0 10px;color:var(--a-ink)}
+.gbook p,.gbook li{font-size:.92rem;line-height:1.8}
+.gbook ul{padding-left:1.2em;margin:6px 0}
+.gbook .src{font-size:.75rem;color:var(--a-muted)}
+.gbook table{width:100%;border-collapse:collapse;font-size:.88rem}
+.gbook th,.gbook td{border-bottom:1px solid var(--a-line);padding:6px 4px;text-align:left;vertical-align:top}
+@media (max-width:760px){.gbook thead{display:none}.gbook tr{display:block;border:1px solid var(--a-line);border-radius:12px;margin:0 0 8px;padding:6px 10px}.gbook td{display:block;border:0;padding:2px 0}.gbook td[data-label]::before{content:attr(data-label);display:block;font-size:.72rem;font-weight:700;color:#5d7380}}
+body{margin:0;font-family:-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--a-ink);background:var(--a-bg)}
+a{color:var(--a-accent)}
+</style>
+</head>
+<body id="top">
+<header class="app-top"><h1 id="appTitle">安倉北ガイド</h1><button type="button" id="bigBtn" aria-label="文字の大きさを切り替え">文字 大</button></header>
+
+<main id="homeView" class="view"><div class="wrap">
+  <div class="hello"><b id="helloMsg">こんにちは</b><span>安倉北（宝塚市）のまわりの「今日どうする？」をすぐに。</span></div>
+  <div class="card" id="installCard" hidden style="font-size:.88rem">📲 Safariの共有ボタンから<b>「ホーム画面に追加」</b>すると、アプリのように開けます。</div>
+  <h2 class="sec-title">🔎 何をさがす？（安倉北から1.5km）</h2>
+  <div class="tiles" id="homeTiles"></div>
+  <p class="mapnote"><span class="dataStatus"></span></p>
+  <h2 class="sec-title">💡 こんなとき</h2>
+  <div class="quick">
+    <button data-go="map"><span class="em">🗺️</span>地図で<br>全体を見る</button>
+    <button data-go="book#g-temple"><span class="em">⛩️</span>中山寺・<br>戌の日</button>
+    <button data-go="book#g-health"><span class="em">🏥</span>健康・介護<br>の窓口</button>
+    <button data-go="book#g-shop"><span class="em">🛒</span>まわりの<br>スーパー</button>
+  </div>
+  <h2 class="sec-title">🚑 急な病気・けが</h2>
+  <div class="quick">
+    <a class="sos" href="tel:119"><span class="em">🚒</span>救急車 119</a>
+    <a href="tel:%237119"><span class="em">☎️</span>救急相談<br>#7119</a>
+    <a href="tel:%238000"><span class="em">👶</span>子どもの<br>医療相談 #8000</a>
+    <button data-go="book#g-emergency"><span class="em">🏥</span>夜間・休日<br>の子ども</button>
+  </div>
+  <p style="font-size:.76rem;color:var(--a-muted);margin:6px 2px">#7119は24時間。#8000は夜間・休日の子どもの医療相談。</p>
+  <h2 class="sec-title">📅 次の行事 <button data-go="events" style="margin-left:auto;min-height:36px;border-radius:10px;border:1px solid #9cc7cf;background:#fff;color:var(--a-accent);font-size:.8rem;padding:2px 10px">カレンダー</button></h2>
+  <div id="homeEvents"></div>
+  <h2 class="sec-title">★ お気に入り</h2>
+  <div id="homeFavs"></div>
+</div></main>
+
+<main id="searchView" class="view" hidden><div class="wrap">
+  <div class="searchbar"><input id="q" type="search" placeholder="店名・町名・ジャンルでさがす（例：ラーメン、安倉中）" autocomplete="off" aria-label="さがす"></div>
+  <div class="chips" id="groupChips" aria-label="種類"></div>
+  <div class="chips" id="rangeChips" aria-label="距離"></div>
+  <div class="chips" id="famChips" aria-label="使い方"></div>
+  <p class="mapnote"><span class="dataStatus"></span> <button type="button" class="osmRefresh" style="min-height:32px;border-radius:10px;border:1px solid #9cc7cf;background:#fff;color:var(--a-accent);font-size:.75rem;padding:2px 8px">最新に更新</button></p>
+  <p class="count" id="count" role="status"></p>
+  <div id="results"></div>
+  <p style="font-size:.76rem;color:var(--a-muted)">営業・診療時間や受け入れ条件は変わります。出かける前に公式の案内で確認してください。</p>
+</div></main>
+
+<main id="mapView" class="view" hidden><div class="wrap">
+  <div class="chips" id="mapChips" aria-label="地図に出す種類"></div>
+  <div class="mapbar"><button type="button" id="locBtn">📍 現在地</button><button type="button" id="fitBtn">🔭 全体を見る</button><span id="mapStatus" class="mapnote" role="status" style="flex:1;margin:0"></span></div>
+  <div id="map" role="application" aria-label="施設の地図"></div>
+  <div class="legend" id="legend"></div>
+  <p class="mapnote">ピンを押すと、Googleマップで開いたり、歩いて行く道順を出したりできます。大きい丸は出典で確認した施設、小さい丸は地図データ（OpenStreetMap）のお店・施設です。点線は安倉北から1.5km。位置は目安で、入口の位置ではありません。地図：国土地理院。</p>
+</div></main>
+
+<main id="eventsView" class="view" hidden><div class="wrap">
+  <div class="cal-head"><button type="button" id="prevM" aria-label="前の月">‹</button><b id="calTitle"></b><button type="button" id="todayM" style="font-size:.8rem">今日</button><button type="button" id="nextM" aria-label="次の月">›</button></div>
+  <div class="cal" id="cal"></div>
+  <button type="button" class="addbtn" id="addEv">＋ わが家の予定を追加</button>
+  <h2 class="sec-title" id="evListTitle"></h2>
+  <div id="evList"></div>
+  <p style="font-size:.78rem;color:var(--a-muted);line-height:1.7">
+    <span class="st 確定">確定</span> 公式・報道で日付を確認　<span class="st 例年">例年</span> 毎年のきまりから計算　<span class="st 目安">目安</span> 例年の時期から置いた仮の日。<br>
+    地域の行事は年によって変わります。参加の前に主催者の案内で確認してください。わが家の予定は、このiPhoneの中だけに保存されます。</p>
+  <h2 class="sec-title">🔗 公式の最新情報</h2>
+  <div class="card links" id="offLinks"></div>
+</div></main>
+<div id="bookView" class="view" hidden><div class="wrap gbook">
+<section class="card" id="g-about">
+  <h2>🏠 安倉北ってどんなところ</h2>
+  <p>宝塚市の南東部、武庫川の東側の住宅地。国道176号と中国自動車道の宝塚インターが近く、沿道にファミレスやチェーン店が集まっています。東どなりは伊丹市荒牧です。</p>
+  <p>このアプリは安倉北（1〜5丁目の中ほど）を中心に、半径1.5kmのお店・施設をまとめています。北に1.5kmほど行くと、中山寺と阪急中山観音駅・JR中山寺駅のある中山寺・中筋エリアです。</p>
+  <p class="src">町の位置は Geolonia 住所データ（町ごとの代表点）による目安です。</p>
+</section>
+
+<section class="card" id="g-emergency">
+  <h2>🚑 急な病気・けが</h2>
+  <table>
+    <thead><tr><th>用件</th><th>連絡先</th><th>補足</th></tr></thead>
+    <tbody>
+      <tr><td>火事・救急</td><td><a href="tel:119">119</a></td><td>迷ったら、まず命を優先</td></tr>
+      <tr><td>救急車を呼ぶか迷うとき</td><td><a href="tel:%237119">#7119</a></td><td>24時間365日。看護師などが症状を聞いて助言する</td></tr>
+      <tr><td>子どもの急な病気の相談</td><td><a href="tel:%238000">#8000</a></td><td>夜間・休日。家での対処や受診の目安を助言する</td></tr>
+      <tr><td>夜間・休日に子どもを診てもらう</td><td>阪神北広域こども急病センター</td><td>小児科医が対面で診る拠点。場所・受付時間は公式の案内で確認</td></tr>
+    </tbody>
+  </table>
+  <p class="src">出典：<a href="https://www.city.takarazuka.hyogo.jp/_res/projects/default_project/_page_/001/063/365/0519_08_miraihetunagukodomoiryou.pdf" target="_blank" rel="noopener">宝塚市「未来へつなぐ子ども医療」資料</a></p>
+</section>
+
+<section class="card" id="g-health">
+  <h2>🏥 健康・介護の窓口（小浜4丁目）</h2>
+  <table>
+    <thead><tr><th>施設</th><th>住所・電話</th><th>使い方</th></tr></thead>
+    <tbody>
+      <tr><td>宝塚市立健康センター（健康推進課）</td><td>小浜4丁目4-1<br><a href="tel:0797860056">0797-86-0056</a></td><td>健診や健康相談。宝塚市立病院のとなり。専用駐車場なし</td></tr>
+      <tr><td>小浜地域包括支援センター</td><td>小浜4丁目5-6<br><a href="tel:0797863707">0797-86-3707</a></td><td>高齢者の介護・暮らしの相談。小浜・安倉・美座・安倉北の小学校区を担当</td></tr>
+      <tr><td>宝塚市立病院</td><td>小浜4丁目</td><td>地域の基幹病院。受診方法は病院の案内で確認</td></tr>
+    </tbody>
+  </table>
+  <p class="src">出典：<a href="https://www.city.takarazuka.hyogo.jp/_res/projects/default_project/_page_/001/017/636/2020benrityo.pdf" target="_blank" rel="noopener">宝塚市「健康づくり べんり帳」（2020年）</a>。電話番号は変わることがあるので、つながらないときは市のホームページで確認。</p>
+</section>
+
+<section class="card" id="g-temple">
+  <h2>⛩️ 中山寺と中山観音公園</h2>
+  <ul>
+    <li>大本山 中山寺：中山寺2-11-1、<a href="tel:0797870024">0797-87-0024</a>。阪急中山観音駅から歩いて約3分</li>
+    <li>毎月の<b>戌の日</b>に安産祈祷会。行事カレンダーに戌の日を入れてあります</li>
+    <li>本尊は毎月18日に開扉</li>
+    <li>8月9日の夜は<b>星下り大会式</b></li>
+    <li>中山観音公園（本堂の裏）：10〜16時、無料。梅が約1,000本、ツツジや藤も</li>
+  </ul>
+  <p class="src">出典：<a href="https://tabi-mag.jp/hg0263/" target="_blank" rel="noopener">旅色マガジン「中山寺」</a>、<a href="https://www.city.takarazuka.hyogo.jp/_res/projects/default_project/_page_/001/060/831/202508_31.pdf" target="_blank" rel="noopener">宝塚市の広報</a></p>
+</section>
+
+<section class="card" id="g-shop">
+  <h2>🛒 まわりのスーパー</h2>
+  <p>出典で名前を確認できたスーパーです。位置は地図データで照合できたものだけピンが立ちます。</p>
+  <ul>
+    <li>コープこうべ 安倉、サンディ 宝塚安倉店</li>
+    <li>ライフ 宝塚中山寺店、ダイエー 宝塚中山店、万代 宝塚中筋店、阪急オアシス 宝塚中筋店（中山寺・中筋方面）</li>
+    <li>コープこうべ めふ（売布）</li>
+    <li>関西スーパー 荒牧店、万代 伊丹荒牧店（伊丹市荒牧方面）</li>
+  </ul>
+  <p class="src">出典：<a href="https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket" target="_blank" rel="noopener">トクバイ（売布神社駅周辺）</a>、<a href="https://tokubai.co.jp/transit/rail_lines/station_groups/5981/supermarket" target="_blank" rel="noopener">トクバイ（逆瀬川駅周辺）</a></p>
+</section>
+
+<section class="card" id="g-data">
+  <h2>📋 このアプリの情報について</h2>
+  <ul>
+    <li><b>確認済み</b>：NAVITIME の町別一覧（住所つき）や、トクバイ・マピオンの一覧で確認したお店。位置は住所から調べた目安</li>
+    <li><b>地図データ</b>：OpenStreetMap。アプリを開くと安倉北から1.6km圏のお店・施設を読み込み、30日保存する</li>
+    <li>個人のお店は抜けていることがあります。各分類の「Googleマップで安倉北まわりの〇〇を見る」で補ってください</li>
+    <li>学区・ごみの出し方・各種手続きは、宝塚市のホームページで最新を確認してください</li>
+  </ul>
+</section>
+</div>
+</div>
+<nav class="tabs" aria-label="画面の切り替え">
+  <button type="button" data-v="home"><span class="ic">🏠</span>ホーム</button>
+  <button type="button" data-v="search"><span class="ic">🔎</span>さがす</button>
+  <button type="button" data-v="map"><span class="ic">🗺️</span>地図</button>
+  <button type="button" data-v="events"><span class="ic">📅</span>行事</button>
+  <button type="button" data-v="book"><span class="ic">📖</span>ガイド</button>
+</nav>
+<div class="sheet-bg" id="sheet" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <h2 id="sheetTitle">わが家の予定を追加</h2>
+  <label for="fTitle">何をする？</label><input id="fTitle" maxlength="80" placeholder="例：保育園の見学、運動会">
+  <div class="row2"><div><label for="fStart">日にち</label><input id="fStart" type="date"></div><div><label for="fEnd">終わりの日（あれば）</label><input id="fEnd" type="date"></div></div>
+  <label for="fTime">時間（あれば）</label><input id="fTime" maxlength="30" placeholder="例：10:00〜11:30">
+  <label for="fPlace">場所</label><input id="fPlace" maxlength="80" placeholder="例：今津小学校">
+  <label for="fNote">メモ</label><textarea id="fNote" rows="3" maxlength="400" placeholder="持ち物など"></textarea>
+  <div class="btns"><button type="button" id="fCancel">やめる</button><button type="button" class="ok" id="fSave">保存する</button></div>
+  <button type="button" class="del" id="fDel" hidden>この予定を削除</button>
+</div></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<script src="leaflet.js"></script>
+<script>window.FACILITIES=[{"id": "n0", "g": "food", "sub": "ファストフード", "name": "ケンタッキーフライドチキン 宝塚インター店", "addr": "安倉北2-18-15", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n1", "g": "food", "sub": "ファミレス", "name": "びっくりドンキー 宝塚店", "addr": "安倉北2-5-18", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n2", "g": "food", "sub": "牛丼", "name": "吉野家 176号線宝塚店", "addr": "安倉北2-19-2", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n3", "g": "food", "sub": "お好み焼き", "name": "お好み焼・鉄板焼 いっきゅうさん 宝塚店", "addr": "安倉北2-19-8", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n4", "g": "food", "sub": "居酒屋・バー", "name": "sorairo", "addr": "安倉北3-5-30", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n5", "g": "food", "sub": "和食", "name": "ゆうさん", "addr": "安倉北2-11-41", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n6", "g": "food", "sub": "中華", "name": "餃子の王将 宝塚インター店", "addr": "安倉北2-5-17", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n7", "g": "food", "sub": "弁当・テイクアウト", "name": "夢弁当", "addr": "安倉北2-13-16", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n8", "g": "food", "sub": "ファミレス", "name": "和食さと 宝塚インター店", "addr": "安倉中3-8-35", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n9", "g": "food", "sub": "ファストフード", "name": "マクドナルド 宝塚インター店", "addr": "安倉中1-1827-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n10", "g": "food", "sub": "居酒屋・バー", "name": "スナックドレミ", "addr": "安倉中1-14-16", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n11", "g": "food", "sub": "ラーメン", "name": "一蘭 宝塚店", "addr": "安倉中3-8-31", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n12", "g": "food", "sub": "和食", "name": "信濃富士", "addr": "安倉中5-10-13", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n13", "g": "food", "sub": "焼肉", "name": "焼肉壱番 太平樂 宝塚安倉店", "addr": "安倉中5-10-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n14", "g": "food", "sub": "カフェ・喫茶", "name": "星乃珈琲店 宝塚安倉店", "addr": "安倉中5-1-7", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n15", "g": "food", "sub": "焼き鳥・串", "name": "やきとり大吉 安倉店", "addr": "安倉中3-11-21", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n16", "g": "food", "sub": "パン屋", "name": "コッペ田島 宝塚安倉店", "addr": "安倉中5-1-7", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n17", "g": "food", "sub": "牛丼・カレー", "name": "マイカリー食堂 宝塚安倉店（松屋併設）", "addr": "安倉南2-2-21", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n18", "g": "food", "sub": "定食・食堂", "name": "まいどおおきに食堂 安倉南食堂", "addr": "安倉南4-168", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n19", "g": "food", "sub": "ラーメン", "name": "河童ラーメン本舗 宝塚店", "addr": "安倉南2-10-39", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n20", "g": "food", "sub": "エスニック・カレー", "name": "アジア料理&カフェ ナマステ", "addr": "安倉南1-20-29", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n21", "g": "food", "sub": "カフェ・喫茶", "name": "ティールーム エメラルド", "addr": "安倉南1-22-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n22", "g": "food", "sub": "韓国料理", "name": "ハルハル 宝塚店", "addr": "安倉南2-2-14", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n23", "g": "food", "sub": "お好み焼き", "name": "広島お好み焼き てんてん", "addr": "安倉南1-24-11", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n24", "g": "food", "sub": "回転寿司", "name": "無添くら寿司 安倉店", "addr": "安倉西4-591-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n25", "g": "food", "sub": "ファストフード", "name": "モスバーガー 宝塚安倉店", "addr": "安倉西4-635", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n26", "g": "food", "sub": "牛丼", "name": "すき家 宝塚安倉店", "addr": "安倉西4-608", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n27", "g": "food", "sub": "カフェ・喫茶", "name": "スターバックス コーヒー 宝塚安倉店", "addr": "安倉西4-610", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n28", "g": "food", "sub": "ラーメン・ちゃんぽん", "name": "長崎ちゃんめん 兵庫宝塚店", "addr": "安倉西4-641", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n29", "g": "food", "sub": "ファミレス", "name": "サガミ 宝塚安倉店", "addr": "安倉西3-443-2", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n30", "g": "food", "sub": "カフェ・喫茶", "name": "オッコ くれよんはうす", "addr": "小浜3-10-13", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n31", "g": "food", "sub": "エスニック・カレー", "name": "スパイスカレー 信念のスプーン", "addr": "小浜3-14-20", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n32", "g": "food", "sub": "ラーメン", "name": "和え麺 餓鬼", "addr": "小浜3-18-4", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n33", "g": "food", "sub": "韓国料理", "name": "福来亭", "addr": "小浜3-1-27", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n34", "g": "food", "sub": "居酒屋・バー", "name": "酒屋Dining 寛や", "addr": "中筋2-425-2", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n35", "g": "food", "sub": "ファミレス", "name": "ステーキガスト 宝塚店", "addr": "中筋7-100-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n36", "g": "food", "sub": "カフェ・喫茶", "name": "スターバックスコーヒー 中山寺店", "addr": "中筋8-11-58", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n37", "g": "food", "sub": "お好み焼き", "name": "お好み焼き・鉄板焼き 偶 宝塚店", "addr": "中筋5-243", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n38", "g": "food", "sub": "うどん・そば", "name": "丸亀製麺 中山寺店", "addr": "中筋4-4", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n39", "g": "food", "sub": "焼肉", "name": "焼肉 MURAKAMI", "addr": "中筋6-13-20", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n40", "g": "food", "sub": "牛丼", "name": "すき家 宝塚中筋店", "addr": "中筋6-13-22", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n41", "g": "food", "sub": "回転寿司", "name": "かっぱ寿司 中山寺店", "addr": "中筋6-3-10", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n42", "g": "food", "sub": "焼肉", "name": "焼肉・ホルモン マルキ精肉 宝塚店", "addr": "中筋7-10-6", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n43", "g": "food", "sub": "スイーツ", "name": "サーティワンアイスクリーム 宝塚中筋店", "addr": "中筋8-21-31", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n44", "g": "food", "sub": "うどん・そば", "name": "本家さぬきや 宝塚店（名湯宝乃湯内）", "addr": "中筋3-3-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n45", "g": "food", "sub": "焼肉・ステーキ", "name": "廣岡揮八郎の三田屋 宝塚店", "addr": "中筋3-135-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n46", "g": "food", "sub": "寿司", "name": "すし一流 宝塚店", "addr": "中筋8-21-34", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n47", "g": "food", "sub": "中華", "name": "中国料理 天津", "addr": "中筋4-8-3", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n48", "g": "food", "sub": "カフェ・喫茶", "name": "むさしの森珈琲 宝塚中筋店", "addr": "中筋7-6-5", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n49", "g": "food", "sub": "ファストフード", "name": "モスバーガー 宝塚中山店", "addr": "中筋8-5-23", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n50", "g": "food", "sub": "カフェ・喫茶", "name": "珈琲屋らんぷ 宝塚店", "addr": "中筋5-18-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n51", "g": "food", "sub": "カフェ・喫茶", "name": "cafe LEON", "addr": "中筋5-9-23", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n52", "g": "food", "sub": "うどん・そば", "name": "そば太鼓亭 宝塚中筋店", "addr": "中筋7-93-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n53", "g": "food", "sub": "弁当・テイクアウト", "name": "BQグルメ", "addr": "中筋7-99-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n54", "g": "food", "sub": "ラーメン", "name": "らーめん もんつきかかか", "addr": "中筋3-2-10", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n55", "g": "food", "sub": "洋食", "name": "オアゾ", "addr": "中筋5-10-25", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n56", "g": "food", "sub": "イタリアン", "name": "ドルチェモスカート 宝塚中山寺店", "addr": "中筋8-13-8", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n57", "g": "food", "sub": "パン屋", "name": "サニーサイド 宝塚中山寺店", "addr": "中筋8-11-52", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n58", "g": "food", "sub": "お好み焼き", "name": "錦わらい 宝塚店", "addr": "中筋7-13-2", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n59", "g": "food", "sub": "パン屋", "name": "パンネル グランデ中山寺", "addr": "中筋5-3-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n60", "g": "food", "sub": "カフェ・喫茶", "name": "ラムパート", "addr": "中山寺2-8-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n61", "g": "food", "sub": "カフェ・喫茶", "name": "和風空間 輪", "addr": "中山寺2-2-2", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n62", "g": "food", "sub": "お好み焼き", "name": "しんちゃん", "addr": "中山寺2-6-9", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n63", "g": "food", "sub": "カフェ・喫茶", "name": "明月記 中山寺カフェ", "addr": "中山寺2-11-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n64", "g": "food", "sub": "カフェ・喫茶", "name": "カフェ・パティーナ", "addr": "中山寺2-6-11", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n65", "g": "food", "sub": "フレンチ", "name": "Chez Hori", "addr": "中山寺2-1-3", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n66", "g": "food", "sub": "和食", "name": "魚安", "addr": "中山寺2-6-6", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n67", "g": "food", "sub": "スイーツ", "name": "ミルテ", "addr": "中山寺2-8-5", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n68", "g": "food", "sub": "居酒屋・バー", "name": "夢吉", "addr": "売布2-14-30", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n69", "g": "food", "sub": "カフェ・喫茶", "name": "カフェ ナルト", "addr": "売布2-8-12", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n70", "g": "food", "sub": "カフェ・喫茶", "name": "BAGDAD CAFE（ピピアめふ5F）", "addr": "売布2-5-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n71", "g": "food", "sub": "焼肉", "name": "味園", "addr": "売布2-3-20", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n72", "g": "food", "sub": "焼肉", "name": "焼肉 牛翔", "addr": "売布2-14-15", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n73", "g": "food", "sub": "カフェ・喫茶", "name": "tamicafe", "addr": "売布3-14-14", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n74", "g": "food", "sub": "居酒屋・バー", "name": "居酒屋 Vincent", "addr": "売布2-12-35", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n75", "g": "food", "sub": "カフェ・喫茶", "name": "Cafe OKINA", "addr": "売布1-22-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n76", "g": "food", "sub": "和食", "name": "食事処 かごのめ（ピピアめふ2）", "addr": "売布2-11-1", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n77", "g": "food", "sub": "カフェ・喫茶", "name": "ちっく", "addr": "売布4-1-12", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n78", "g": "food", "sub": "スイーツ", "name": "菅屋 本店", "addr": "泉町19-14", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n79", "g": "food", "sub": "居酒屋・バー", "name": "NUTS BAL by Fuji Farm", "addr": "泉町19-26", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n80", "g": "food", "sub": "寿司", "name": "寿し平", "addr": "向月町19-10", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n81", "g": "food", "sub": "カフェ・喫茶", "name": "スワン", "addr": "向月町3-3", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n82", "g": "food", "sub": "焼肉", "name": "焼肉Dining 勲", "addr": "御所の前町5-22", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n83", "g": "food", "sub": "ラーメン", "name": "三豊麺 斬 宝塚中筋店", "addr": "長尾町1-16", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "n84", "g": "food", "sub": "とんかつ", "name": "かつアンドかつ 宝塚中山店", "addr": "", "dist": "", "note": "", "url": "https://www.navitime.co.jp/category/03/28214/", "map": "", "fam": "", "src": "check"}, {"id": "s0", "g": "super", "sub": "スーパー", "name": "コープこうべ 安倉", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "s1", "g": "super", "sub": "スーパー", "name": "サンディ 宝塚安倉店", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "s2", "g": "super", "sub": "スーパー", "name": "ライフ 宝塚中山寺店", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "s3", "g": "super", "sub": "スーパー", "name": "ダイエー 宝塚中山店", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "s4", "g": "super", "sub": "スーパー", "name": "万代 宝塚中筋店", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "s5", "g": "super", "sub": "スーパー", "name": "阪急オアシス 宝塚中筋店", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "s6", "g": "super", "sub": "スーパー", "name": "コープこうべ めふ", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "s7", "g": "super", "sub": "スーパー", "name": "関西スーパー 荒牧店", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "s8", "g": "super", "sub": "スーパー", "name": "万代 伊丹荒牧店", "addr": "", "dist": "", "note": "", "url": "https://tokubai.co.jp/transit/rail_lines/station_groups/5949/supermarket", "map": "", "fam": "", "src": "check"}, {"id": "d0", "g": "drug", "sub": "ドラッグストア・薬局", "name": "フタツカ薬局 中山寺店", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d1", "g": "drug", "sub": "ドラッグストア・薬局", "name": "ウエルシア薬局 宝塚中筋店", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d2", "g": "drug", "sub": "ドラッグストア・薬局", "name": "シンバシ薬局", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d3", "g": "drug", "sub": "ドラッグストア・薬局", "name": "スギ薬局 宝塚中山店", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d4", "g": "drug", "sub": "ドラッグストア・薬局", "name": "にじいろすみれ薬局", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d5", "g": "drug", "sub": "ドラッグストア・薬局", "name": "おひさま薬局", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d6", "g": "drug", "sub": "ドラッグストア・薬局", "name": "そうごう薬局 宝塚小浜店", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d7", "g": "drug", "sub": "ドラッグストア・薬局", "name": "キリン堂 伊丹荒牧店", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d8", "g": "drug", "sub": "ドラッグストア・薬局", "name": "かるがも薬局 伊丹荒牧店", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "d9", "g": "drug", "sub": "ドラッグストア・薬局", "name": "がる薬局 宝塚インター店", "addr": "", "dist": "", "note": "", "url": "https://www.mapion.co.jp/phonebook/M02021/28214/ST26467/", "map": "", "fam": "", "src": "check"}, {"id": "p0", "g": "public", "sub": "健康センター", "name": "宝塚市立健康センター（健康推進課）", "addr": "小浜4-4-1", "dist": "", "note": "健診・健康相談。0797-86-0056", "url": "https://www.city.takarazuka.hyogo.jp/_res/projects/default_project/_page_/001/017/636/2020benrityo.pdf", "map": "", "fam": "", "src": "check", "phone": "0797860056"}, {"id": "p1", "g": "welfare", "sub": "地域包括支援センター", "name": "小浜地域包括支援センター", "addr": "小浜4-5-6", "dist": "", "note": "高齢者の介護・暮らしの相談（小浜・安倉・美座・安倉北の小学校区）。0797-86-3707", "url": "https://www.city.takarazuka.hyogo.jp/_res/projects/default_project/_page_/001/017/636/2020benrityo.pdf", "map": "", "fam": "", "src": "check", "phone": "0797863707"}, {"id": "p2", "g": "medical", "sub": "病院", "name": "宝塚市立病院", "addr": "小浜4丁目", "dist": "", "note": "地域の基幹病院", "url": "https://www.city.takarazuka.hyogo.jp/_res/projects/default_project/_page_/001/017/636/2020benrityo.pdf", "map": "", "fam": "", "src": "check"}, {"id": "p3", "g": "temple", "sub": "お寺", "name": "大本山 中山寺", "addr": "中山寺2-11-1", "dist": "", "note": "戌の日の安産祈祷、毎月18日の本尊開扉、8月9日の星下り大会式。0797-87-0024", "url": "https://tabi-mag.jp/hg0263/", "map": "", "fam": "", "src": "check", "phone": "0797870024"}, {"id": "p4", "g": "park", "sub": "公園", "name": "中山観音公園", "addr": "中山寺2-11-1", "dist": "", "note": "中山寺の本堂裏。10〜16時、無料。梅・ツツジ・藤", "url": "https://www.city.takarazuka.hyogo.jp/_res/projects/default_project/_page_/001/060/831/202508_31.pdf", "map": "", "fam": "", "src": "check"}];window.TOWNS={"安倉北一丁目": [34.806393, 135.368361], "安倉北二丁目": [34.804813, 135.371763], "安倉北三丁目": [34.80703, 135.370933], "安倉北四丁目": [34.80909, 135.372774], "安倉北五丁目": [34.807723, 135.375075], "安倉中一丁目": [34.801992, 135.369896], "安倉中二丁目": [34.798842, 135.371332], "安倉中三丁目": [34.802613, 135.373547], "安倉中四丁目": [34.800215, 135.374249], "安倉中五丁目": [34.803762, 135.376373], "安倉中六丁目": [34.80071, 135.378309], "安倉西一丁目": [34.802104, 135.366665], "安倉西二丁目": [34.796942, 135.370083], "安倉西三丁目": [34.795376, 135.372675], "安倉西四丁目": [34.792799, 135.375126], "安倉南一丁目": [34.798414, 135.375125], "安倉南二丁目": [34.795398, 135.375875], "安倉南三丁目": [34.79622, 135.3783], "安倉南四丁目": [34.797425, 135.380484], "旭町一丁目": [34.809041, 135.353742], "旭町二丁目": [34.808384, 135.35675], "旭町三丁目": [34.806311, 135.356551], "泉ガ丘": [34.821807, 135.359661], "泉町": [34.810316, 135.370127], "伊孑志一丁目": [34.798891, 135.353833], "伊孑志二丁目": [34.800365, 135.355624], "伊孑志三丁目": [34.797713, 135.356674], "伊孑志四丁目": [34.796329, 135.362709], "今里町": [34.814493, 135.370372], "梅野町": [34.805109, 135.342733], "大吹町": [34.783815, 135.359715], "小林一丁目": [34.793799, 135.352874], "小林二丁目": [34.789723, 135.35316], "小林三丁目": [34.795259, 135.356386], "小林四丁目": [34.79339, 135.356202], "小林五丁目": [34.790068, 135.355635], "鹿塩一丁目": [34.781616, 135.355897], "金井町": [34.793358, 135.378031], "亀井町": [34.79412, 135.362385], "川面一丁目": [34.811151, 135.349464], "川面二丁目": [34.813839, 135.350234], "川面三丁目": [34.811176, 135.34559], "川面四丁目": [34.813581, 135.347952], "川面五丁目": [34.813196, 135.339459], "川面六丁目": [34.814523, 135.341309], "清荒神一丁目": [34.81124, 135.352749], "清荒神二丁目": [34.812958, 135.355208], "清荒神三丁目": [34.815513, 135.351187], "清荒神四丁目": [34.815876, 135.353733], "清荒神五丁目": [34.818165, 135.353521], "口谷西一丁目": [34.817463, 135.394362], "口谷西二丁目": [34.816639, 135.397397], "口谷西三丁目": [34.81338, 135.398018], "口谷東一丁目": [34.818651, 135.399241], "口谷東二丁目": [34.81708, 135.399562], "口谷東三丁目": [34.813424, 135.400552], "向月町": [34.806964, 135.361442], "光明町": [34.790123, 135.35915], "寿町": [34.810742, 135.366448], "小浜一丁目": [34.800398, 135.36441], "小浜二丁目": [34.802142, 135.365273], "小浜三丁目": [34.804537, 135.361117], "小浜四丁目": [34.805829, 135.365582], "小浜五丁目": [34.807098, 135.363958], "駒の町": [34.779927, 135.362299], "御所の前町": [34.792796, 135.368036], "御殿山一丁目": [34.817435, 135.348491], "御殿山二丁目": [34.815373, 135.34609], "御殿山三丁目": [34.816743, 135.341774], "御殿山四丁目": [34.819778, 135.346797], "栄町一丁目": [34.808351, 135.344783], "栄町二丁目": [34.810603, 135.340331], "栄町三丁目": [34.812648, 135.336417], "逆瀬川一丁目": [34.799193, 135.3519], "逆瀬川二丁目": [34.795369, 135.34752], "桜ガ丘": [34.81728, 135.338162], "新明和町": [34.779872, 135.368166], "寿楽荘": [34.800023, 135.342687], "末成町": [34.790032, 135.363234], "末広町": [34.801383, 135.358233], "すみれガ丘一丁目": [34.820456, 135.34242], "すみれガ丘二丁目": [34.822861, 135.342561], "すみれガ丘三丁目": [34.825717, 135.345483], "すみれガ丘四丁目": [34.821173, 135.337662], "大成町": [34.783852, 135.356478], "高司一丁目": [34.786353, 135.359286], "高司二丁目": [34.786362, 135.363044], "高司三丁目": [34.783785, 135.363172], "高司四丁目": [34.785604, 135.36632], "高司五丁目": [34.784555, 135.368542], "高松町": [34.790467, 135.366426], "谷口町": [34.785526, 135.353824], "千種一丁目": [34.792013, 135.349831], "千種二丁目": [34.789238, 135.350899], "千種三丁目": [34.789525, 135.348154], "千種四丁目": [34.791869, 135.34577], "月見山一丁目": [34.80839, 135.338335], "月見山二丁目": [34.809453, 135.335305], "鶴の荘": [34.807881, 135.359192], "塔の町": [34.786507, 135.350752], "東洋町": [34.797971, 135.363236], "中州一丁目": [34.800378, 135.349868], "中州二丁目": [34.802871, 135.351817], "中筋": [34.827611, 135.373814], "中筋一丁目": [34.81924, 135.372743], "中筋二丁目": [34.819554, 135.37668], "中筋三丁目": [34.817381, 135.377413], "中筋四丁目": [34.817476, 135.372996], "中筋五丁目": [34.815447, 135.373757], "中筋六丁目": [34.814951, 135.378152], "中筋七丁目": [34.812991, 135.378998], "中筋八丁目": [34.813202, 135.374055], "中筋九丁目": [34.811424, 135.374159], "中筋山手一丁目": [34.822102, 135.370293], "中筋山手二丁目": [34.824151, 135.369659], "中筋山手三丁目": [34.82239, 135.373243], "中筋山手四丁目": [34.82248, 135.375497], "中筋山手五丁目": [34.825915, 135.375738], "中筋山手六丁目": [34.824281, 135.374435], "中筋山手七丁目": [34.825993, 135.373317], "中野町": [34.786415, 135.35584], "中山桜台一丁目": [34.829858, 135.367439], "中山桜台二丁目": [34.832765, 135.36469], "中山桜台三丁目": [34.830674, 135.362677], "中山桜台四丁目": [34.834816, 135.362001], "中山桜台五丁目": [34.836731, 135.364662], "中山五月台一丁目": [34.830543, 135.370196], "中山五月台二丁目": [34.833121, 135.369382], "中山五月台三丁目": [34.835637, 135.367898], "中山五月台四丁目": [34.837974, 135.368279], "中山荘園": [34.821088, 135.3635], "中山台一丁目": [34.827777, 135.364445], "中山台二丁目": [34.827405, 135.368551], "中山寺": [34.832005, 135.353485], "中山寺一丁目": [34.81826, 135.369435], "中山寺二丁目": [34.820851, 135.36726], "中山寺三丁目": [34.818805, 135.365723], "長尾町": [34.814698, 135.382175], "仁川北一丁目": [34.775592, 135.369752], "仁川台": [34.783883, 135.350986], "仁川団地": [34.781368, 135.350039], "野上一丁目": [34.798305, 135.347645], "野上二丁目": [34.796038, 135.346347], "野上三丁目": [34.793079, 135.342949], "野上四丁目": [34.794649, 135.341019], "野上五丁目": [34.793277, 135.338471], "野上六丁目": [34.790724, 135.339485], "雲雀丘二丁目": [34.828541, 135.398331], "雲雀丘三丁目": [34.827286, 135.397406], "雲雀丘四丁目": [34.825742, 135.400939], "平井一丁目": [34.825393, 135.387058], "平井二丁目": [34.824418, 135.389889], "平井三丁目": [34.824992, 135.39282], "平井四丁目": [34.825707, 135.395246], "平井五丁目": [34.821812, 135.39033], "平井六丁目": [34.822928, 135.394049], "平井七丁目": [34.821485, 135.394881], "平井山荘": [34.827516, 135.389449], "福井町": [34.794176, 135.359642], "宝松苑": [34.799676, 135.337538], "宝梅一丁目": [34.797928, 135.343711], "宝梅二丁目": [34.796956, 135.340042], "宝梅三丁目": [34.796447, 135.336571], "星の荘": [34.814275, 135.3663], "米谷": [34.821344, 135.353124], "米谷一丁目": [34.810457, 135.362654], "米谷二丁目": [34.811569, 135.359175], "三笠町": [34.813562, 135.369093], "美座一丁目": [34.80263, 135.360123], "美座二丁目": [34.804965, 135.35645], "南口一丁目": [34.801507, 135.344968], "南口二丁目": [34.803547, 135.348129], "南ひばりガ丘一丁目": [34.822938, 135.398047], "南ひばりガ丘二丁目": [34.821691, 135.398037], "南ひばりガ丘三丁目": [34.819928, 135.39876], "宮の町": [34.80884, 135.349859], "美幸町": [34.78681, 135.369987], "武庫川町": [34.806567, 135.350085], "武庫山一丁目": [34.802393, 135.341028], "武庫山二丁目": [34.80565, 135.33912], "売布一丁目": [34.813044, 135.36257], "売布二丁目": [34.814519, 135.361787], "売布三丁目": [34.81439, 135.358442], "売布四丁目": [34.818315, 135.361777], "売布ガ丘": [34.816755, 135.356411], "売布きよしガ丘": [34.821395, 135.357056], "売布自由ガ丘": [34.819586, 135.355173], "売布東の町": [34.816653, 135.36597], "売布山手町": [34.817961, 135.358624], "紅葉ガ丘": [34.805488, 135.334296], "社町": [34.794884, 135.349696], "山手台西一丁目": [34.827259, 135.377412], "山手台西二丁目": [34.830627, 135.375596], "山手台西三丁目": [34.834073, 135.375673], "山手台西四丁目": [34.837345, 135.373178], "山手台東一丁目": [34.826662, 135.382715], "山手台東二丁目": [34.831333, 135.379176], "山手台東三丁目": [34.835468, 135.379562], "山本台一丁目": [34.822665, 135.379915], "山本台二丁目": [34.824856, 135.380142], "山本台三丁目": [34.824701, 135.377599], "山本中一丁目": [34.82282, 135.382662], "山本中二丁目": [34.819666, 135.383239], "山本中三丁目": [34.817728, 135.384207], "山本西一丁目": [34.821826, 135.377981], "山本西二丁目": [34.819694, 135.379896], "山本西三丁目": [34.817292, 135.380949], "山本野里一丁目": [34.808304, 135.394151], "山本野里二丁目": [34.808956, 135.396619], "山本野里三丁目": [34.809594, 135.400635], "山本東一丁目": [34.822741, 135.384894], "山本東二丁目": [34.82031, 135.386668], "山本東三丁目": [34.81979, 135.389314], "山本丸橋一丁目": [34.814595, 135.391214], "山本丸橋二丁目": [34.814852, 135.394595], "山本丸橋三丁目": [34.812278, 135.392524], "山本丸橋四丁目": [34.812328, 135.395702], "山本南一丁目": [34.816062, 135.386607], "山本南二丁目": [34.817494, 135.390823], "山本南三丁目": [34.819238, 135.392378], "弥生町": [34.795991, 135.368308], "湯本町": [34.806853, 135.342807], "伊丹市荒牧一丁目": [34.808217, 135.380056], "伊丹市荒牧二丁目": [34.808342, 135.377224], "伊丹市荒牧三丁目": [34.810675, 135.378334], "伊丹市荒牧四丁目": [34.812394, 135.382619], "伊丹市荒牧五丁目": [34.809955, 135.383811], "伊丹市荒牧六丁目": [34.811527, 135.388455], "伊丹市荒牧七丁目": [34.813975, 135.386862], "伊丹市荒牧南一丁目": [34.805027, 135.378827], "伊丹市荒牧南二丁目": [34.805805, 135.381345], "伊丹市荒牧南三丁目": [34.806814, 135.384294], "伊丹市荒牧南四丁目": [34.807493, 135.386598], "伊丹市池尻二丁目": [34.779774, 135.382328], "伊丹市池尻三丁目": [34.781828, 135.382573], "伊丹市池尻四丁目": [34.785359, 135.381517], "伊丹市池尻五丁目": [34.776428, 135.380614], "伊丹市池尻六丁目": [34.781894, 135.378566], "伊丹市池尻七丁目": [34.781651, 135.375953], "伊丹市大野一丁目": [34.805777, 135.400223], "伊丹市大野二丁目": [34.803551, 135.397818], "伊丹市大野三丁目": [34.806344, 135.398029], "伊丹市荻野一丁目": [34.80068, 135.394796], "伊丹市荻野二丁目": [34.803766, 135.395341], "伊丹市荻野三丁目": [34.802996, 135.393442], "伊丹市荻野四丁目": [34.806194, 135.393509], "伊丹市荻野五丁目": [34.805157, 135.391498], "伊丹市荻野六丁目": [34.808489, 135.391701], "伊丹市荻野七丁目": [34.806753, 135.390165], "伊丹市荻野八丁目": [34.808541, 135.388926], "伊丹市荻野西一丁目": [34.802169, 135.390994], "伊丹市荻野西二丁目": [34.803304, 135.390238], "伊丹市奥畑一丁目": [34.78379, 135.388803], "伊丹市奥畑二丁目": [34.782248, 135.386016], "伊丹市奥畑三丁目": [34.784743, 135.387696], "伊丹市奥畑四丁目": [34.784235, 135.38568], "伊丹市奥畑五丁目": [34.786532, 135.385376], "伊丹市北野一丁目": [34.802103, 135.386989], "伊丹市北野二丁目": [34.803852, 135.38528], "伊丹市北野三丁目": [34.804141, 135.386429], "伊丹市北野四丁目": [34.802816, 135.388342], "伊丹市北野五丁目": [34.804739, 135.387277], "伊丹市北野六丁目": [34.805362, 135.388322], "伊丹市鴻池一丁目": [34.797134, 135.391217], "伊丹市鴻池二丁目": [34.794703, 135.389579], "伊丹市鴻池三丁目": [34.796607, 135.385666], "伊丹市鴻池四丁目": [34.799437, 135.390383], "伊丹市鴻池五丁目": [34.80072, 135.388931], "伊丹市鴻池六丁目": [34.799909, 135.384056], "伊丹市鴻池七丁目": [34.803454, 135.381969], "伊丹市昆陽池一丁目": [34.784126, 135.397482], "伊丹市昆陽池二丁目": [34.786411, 135.395227], "伊丹市昆陽池三丁目": [34.789017, 135.393924], "伊丹市昆陽北一丁目": [34.782393, 135.393046], "伊丹市昆陽北二丁目": [34.786997, 135.391655], "伊丹市寺本五丁目": [34.780398, 135.388726], "伊丹市寺本六丁目": [34.780557, 135.386045], "伊丹市中野北一丁目": [34.795426, 135.383523], "伊丹市中野北二丁目": [34.79379, 135.3834], "伊丹市中野北三丁目": [34.791604, 135.381427], "伊丹市中野北四丁目": [34.793005, 135.380584], "伊丹市中野西一丁目": [34.788525, 135.386603], "伊丹市中野西二丁目": [34.791334, 135.385808], "伊丹市中野西三丁目": [34.788251, 135.383214], "伊丹市中野西四丁目": [34.790628, 135.382618], "伊丹市中野東一丁目": [34.791715, 135.391679], "伊丹市中野東二丁目": [34.793254, 135.390948], "伊丹市中野東三丁目": [34.792212, 135.387407], "伊丹市西野一丁目": [34.787001, 135.379355], "伊丹市西野二丁目": [34.789638, 135.378641], "伊丹市西野三丁目": [34.789845, 135.37569], "伊丹市西野四丁目": [34.784843, 135.375191], "伊丹市西野五丁目": [34.789644, 135.373459], "伊丹市西野六丁目": [34.791992, 135.372645], "伊丹市西野七丁目": [34.78447, 135.372955], "伊丹市西野八丁目": [34.79077, 135.370752], "伊丹市東野一丁目": [34.799262, 135.402763], "伊丹市東野二丁目": [34.799129, 135.401812], "伊丹市東野三丁目": [34.801225, 135.402093], "伊丹市東野四丁目": [34.802717, 135.401321], "伊丹市東野五丁目": [34.802124, 135.398809], "伊丹市東野六丁目": [34.800063, 135.400649], "伊丹市東野七丁目": [34.800236, 135.3995], "伊丹市東野八丁目": [34.799853, 135.397583], "伊丹市広畑一丁目": [34.789067, 135.402998], "伊丹市広畑三丁目": [34.788106, 135.401192], "伊丹市広畑四丁目": [34.787139, 135.400793], "伊丹市広畑五丁目": [34.786723, 135.400166], "伊丹市広畑六丁目": [34.785873, 135.398732], "伊丹市松ケ丘一丁目": [34.788111, 135.389957], "伊丹市松ケ丘二丁目": [34.78663, 135.389496], "伊丹市松ケ丘三丁目": [34.785944, 135.389336], "伊丹市松ケ丘四丁目": [34.78509, 135.389244], "伊丹市瑞ケ丘一丁目": [34.792894, 135.399491], "伊丹市瑞ケ丘二丁目": [34.789476, 135.398641], "伊丹市瑞ケ丘三丁目": [34.79351, 135.397643], "伊丹市瑞ケ丘四丁目": [34.793791, 135.396327], "伊丹市瑞ケ丘五丁目": [34.795524, 135.400304], "伊丹市瑞原一丁目": [34.793985, 135.39424], "伊丹市瑞原二丁目": [34.795641, 135.395218], "伊丹市瑞原三丁目": [34.79843, 135.395176], "伊丹市瑞原四丁目": [34.797796, 135.39908], "伊丹市瑞穂町三丁目": [34.792109, 135.404889], "伊丹市瑞穂町四丁目": [34.793144, 135.403945], "伊丹市瑞穂町五丁目": [34.793257, 135.402399], "伊丹市瑞穂町六丁目": [34.790911, 135.401611], "伊丹市緑ケ丘二丁目": [34.794598, 135.406242], "伊丹市緑ケ丘四丁目": [34.797063, 135.407451], "伊丹市緑ケ丘五丁目": [34.797062, 135.404272], "伊丹市緑ケ丘六丁目": [34.799235, 135.404152], "伊丹市緑ケ丘七丁目": [34.799718, 135.407658], "川西市加茂二丁目": [34.816513, 135.405706], "川西市加茂三丁目": [34.814555, 135.402561], "川西市加茂四丁目": [34.812889, 135.405616], "川西市加茂五丁目": [34.813091, 135.409346], "川西市久代三丁目": [34.807336, 135.406875], "川西市久代四丁目": [34.80515, 135.403043], "川西市久代五丁目": [34.802855, 135.40848], "川西市南花屋敷三丁目": [34.820357, 135.402756], "川西市南花屋敷四丁目": [34.82351, 135.402857]};</script>
+<script>
+/* 安倉北まわりの行事。日付の確かさを status で区別する。
+   確定=公式で日付を確認 / 例年=毎年のきまりから計算 / 目安=時期から置いた仮の日 */
+const EVENT_SOURCES = {
+  temple: "https://tabi-mag.jp/hg0263/",
+  city: "https://www.city.takarazuka.hyogo.jp/_res/projects/default_project/_page_/001/060/831/202508_31.pdf",
+};
+const ymd = (y, m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+// その日の十二支（0=子 … 10=戌）。2024年1月1日が甲子の日であることから計算
+function eto(y, m, d) {
+  const a = Math.floor((14 - m) / 12), yy = y + 4800 - a, mm = m + 12 * a - 3;
+  const jdn = d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+  return (jdn + 1) % 12;
+}
+function buildRegionalEvents(fromYear, toYear) {
+  const out = [];
+  for (let y = fromYear; y <= toYear; y++) {
+    out.push({ id: `hoshi-${y}`, title: "星下り大会式（中山寺）", start: ymd(y, 8, 9), end: ymd(y, 8, 9), place: "大本山 中山寺（中山寺2-11-1）",
+      kind: "祭り", status: "例年", kids: true,
+      note: "毎年8月9日の夜、西国三十三所の観音さまが星に乗って本堂に集まるとされる行事。夜の梵天奉幣が見どころ。混雑するので時間と交通は寺の案内で確認。",
+      src: EVENT_SOURCES.temple });
+    for (let m = 1; m <= 12; m++) {
+      out.push({ id: `kaihi-${y}-${m}`, title: "中山寺 本尊のご開扉", start: ymd(y, m, 18), end: ymd(y, m, 18), place: "大本山 中山寺",
+        kind: "寺社", status: "例年", kids: false, note: "毎月18日に本尊が開扉される。", src: EVENT_SOURCES.temple });
+      const days = new Date(y, m, 0).getDate();
+      for (let d = 1; d <= days; d++) {
+        if (eto(y, m, d) === 10) out.push({ id: `inu-${y}-${m}-${d}`, title: "戌の日 安産祈祷（中山寺）", start: ymd(y, m, d), end: ymd(y, m, d), place: "大本山 中山寺",
+          kind: "寺社", status: "例年", kids: true, note: "毎月の戌の日に安産祈祷会。戌の日は特に混み合う。受付時間は寺で確認。", src: EVENT_SOURCES.temple });
+      }
+    }
+    out.push({ id: `ume-${y}`, title: "中山観音公園の梅（見ごろの目安）", start: ymd(y, 2, 20), end: ymd(y, 3, 10), place: "中山観音公園（中山寺の本堂裏）",
+      kind: "季節", status: "目安", kids: true, note: "約1,000本の梅。公園は10〜16時、無料。見ごろは年によって変わる。", src: EVENT_SOURCES.city });
+  }
+  return out;
+}
+function officialEventLinks() {
+  return [
+    { label: "宝塚市のホームページ（イベント・お知らせ）", url: "https://www.city.takarazuka.hyogo.jp/" },
+    { label: "中山寺の紹介（旅色マガジン）", url: EVENT_SOURCES.temple },
+    { label: "宝塚市の広報（星下り大会式・中山観音公園）", url: EVENT_SOURCES.city },
+  ];
+}
+
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+
+/* ---------- 分類（ふだんの言葉で） ---------- */
+const GROUPS = [
+  { key: "food", label: "ご飯・カフェ", em: "🍚", color: "#e0703a", g: "飲食店" },
+  { key: "super", label: "スーパー", em: "🛒", color: "#d39a1f", g: "スーパー" },
+  { key: "conv", label: "コンビニ", em: "🏪", color: "#9a7b16", g: "コンビニ" },
+  { key: "drug", label: "ドラッグストア・薬局", em: "💊", color: "#7b8f1f", g: "ドラッグストア" },
+  { key: "shop", label: "お店（そのほか）", em: "🛍️", color: "#b8783a", g: "お店" },
+  { key: "medical", label: "病院・クリニック", em: "🏥", color: "#c0483a", g: "病院" },
+  { key: "dental", label: "歯医者", em: "🦷", color: "#d0648a", g: "歯医者" },
+  { key: "school", label: "学校・学童", em: "🏫", color: "#2b6cb0", g: "学校" },
+  { key: "nursery", label: "保育園・幼稚園", em: "🧸", color: "#8a5cc2", g: "保育園" },
+  { key: "lesson", label: "習い事・塾", em: "🎹", color: "#c2417a", g: "習い事" },
+  { key: "welfare", label: "福祉・介護・子育て支援", em: "🤝", color: "#23857b", g: "介護施設" },
+  { key: "park", label: "公園", em: "🌳", color: "#3f8f3a", g: "公園" },
+  { key: "beauty", label: "美容院・理容", em: "💇", color: "#a35bb5", g: "美容院" },
+  { key: "public", label: "銀行・郵便・公共", em: "🏤", color: "#4a5a68", g: "郵便局" },
+  { key: "life", label: "運動・あそび・宿泊", em: "🏋️", color: "#2f7fa0", g: "スポーツ施設" },
+  { key: "temple", label: "神社・お寺", em: "⛩️", color: "#8b5a2b", g: "神社" },
+];
+const GMAP = Object.fromEntries(GROUPS.map(g => [g.key, g]));
+const groupOf = f => GMAP[f.g] || GMAP.shop;
+const FAM = [
+  { key: "baby", label: "🍼 赤ちゃん・幼児" },
+  { key: "school", label: "🎒 小学生" },
+  { key: "indoor", label: "☔ 雨の日も（屋内）" },
+  { key: "free", label: "🪙 無料" },
+  { key: "trial", label: "🌱 体験あり" },
+];
+const RANGES = [500, 1000, 1500];
+const gmap = q => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
+const groute = f => "https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=" + encodeURIComponent(f.lat ? `${f.lat},${f.lng}` : fq(f));
+const fq = f => (f.addr && /[市町]/.test(f.addr.slice(0, 4)) ? "" : "宝塚市 ") + (f.addr && !/詳細位置/.test(f.addr) ? f.addr + " " : "") + f.name;
+const gmapOf = f => f.map || (f.lat && f.src === "osm" ? gmap(`${f.name} ${f.lat},${f.lng}`) : gmap(fq(f)));
+
+/* ---------- データ：ガイドの施設＋追加で確認した施設＋地図データ（OpenStreetMap） ---------- */
+let STATION = [34.8070, 135.3718];   // 中心：安倉北（安倉北1〜5丁目の中ほど）
+const TOWNS = window.TOWNS || {};
+const BASE = window.FACILITIES || [];
+let geo = store.get("akura-geo-v1", {});
+let OSM = (store.get("akura-osm-v3", null) || {}).items || [];
+let osmTime = (store.get("akura-osm-v3", null) || {}).t || 0;
+let ITEMS = [];
+const norm = s => String(s || "").replace(/[\s　・･\-－（）()「」『』株式会社有限会社医療法人社団財団]/g, "").replace(/店$/, "").toLowerCase();
+
+function townOf(addr) {
+  if (!addr) return null;
+  const a = addr.replace(/^(兵庫県)?(宝塚市|伊丹市|川西市)/, "");
+  let best = null;
+  for (const t in TOWNS) if (a.startsWith(t) && (!best || t.length > best.length)) best = t;
+  if (!best) { // 「東町1-12」→「東町一丁目」
+    const m = a.match(/^(\D+?)(\d)(?:[-－丁]|$)/);
+    if (m) { const k = m[1] + "〇一二三四五六七八九"[+m[2]] + "丁目"; if (TOWNS[k]) best = k; else if (TOWNS[m[1]]) best = m[1]; }
+  }
+  return best ? TOWNS[best] : null;
+}
+function distM(a, b) {
+  const R = 6371000, la = (a[0] + b[0]) / 2 * Math.PI / 180;
+  return Math.round(Math.hypot((a[0] - b[0]) * Math.PI / 180 * R, (a[1] - b[1]) * Math.PI / 180 * R * Math.cos(la)));
+}
+function rebuild() {
+  const base = BASE.map(f => {
+    const p = Array.isArray(geo[f.id]) ? geo[f.id] : townOf(f.addr);
+    return { ...f, lat: p ? p[0] : null, lng: p ? p[1] : null, approx: !Array.isArray(geo[f.id]) };
+  });
+  // 地図データの同じ店を見つけて、正確な位置を借りる（重複は1つにまとめる）
+  const used = new Set();
+  const byName = {};
+  OSM.forEach((o, i) => { const k = norm(o.name); (byName[k] = byName[k] || []).push(i); });
+  base.forEach(f => {
+    const k = norm(f.name);
+    let cand = byName[k] || [];
+    if (!cand.length) {
+      for (const kk in byName) { if (kk.length >= 3 && k.length >= 3 && (kk.includes(k) || k.includes(kk))) { cand = cand.concat(byName[kk]); } }
+    }
+    let pick = -1, bd = 1e9;
+    cand.forEach(i => { if (used.has(i)) return; const o = OSM[i]; const d = f.lat ? distM([f.lat, f.lng], [o.lat, o.lng]) : 0; if (d < 700 && d < bd) { bd = d; pick = i; } });
+    if (pick >= 0) { const o = OSM[pick]; used.add(pick); f.lat = o.lat; f.lng = o.lng; f.approx = false; f.phone = f.phone || o.phone; f.hours = f.hours || o.hours; f.web = f.web || o.web; }
+  });
+  ITEMS = base.concat(OSM.filter((o, i) => !used.has(i)));
+  ITEMS.forEach(f => { if (f.lat) { f.d = distM(STATION, [f.lat, f.lng]); f.ref = ""; } else { f.d = null; } });
+  ITEMS = ITEMS.filter(f => f.d == null || f.d <= 1600 || f.src !== "osm");
+}
+
+/* ---------- 地図データ（OpenStreetMap）を読み込む ---------- */
+const OSM_EXCLUDE = /^(parking|parking_entrance|parking_space|bicycle_parking|motorcycle_parking|vending_machine|toilets|bench|waste_basket|waste_disposal|recycling|shelter|drinking_water|clock|telephone|post_box|fountain|grave_yard|loading_dock|smoking_area|taxi|bicycle_rental|charging_station|watering_place|hunting_stand|give_box|letter_box|photo_booth|ticket_validator|parcel_locker|compressed_air|water_point|lounger|table|bbq|dog_toilet)$/;
+const CUISINE = { ramen: "ラーメン", sushi: "寿司", japanese: "和食", chinese: "中華", italian: "イタリアン", pizza: "ピザ", burger: "ハンバーガー", curry: "カレー", udon: "うどん", soba: "そば", noodle: "麺類", yakiniku: "焼肉", okonomiyaki: "お好み焼き", takoyaki: "たこ焼き", korean: "韓国料理", indian: "インド料理", thai: "タイ料理", vietnamese: "ベトナム料理", french: "フレンチ", western: "洋食", coffee_shop: "カフェ", cake: "ケーキ", donut: "ドーナツ", chicken: "からあげ・チキン", beef_bowl: "牛丼", tonkatsu: "とんかつ", yakitori: "焼き鳥", izakaya: "居酒屋", steak_house: "ステーキ", seafood: "海鮮", ice_cream: "アイス", crepe: "クレープ", bakery: "パン", sandwich: "サンドイッチ", tempura: "天ぷら", gyoza: "餃子", kushikatsu: "串カツ", teishoku: "定食", bento: "弁当", spanish: "スペイン料理", mexican: "メキシコ料理", american: "アメリカン", asian: "アジア料理", fish_and_chips: "フィッシュ＆チップス", tea: "お茶", bubble_tea: "タピオカ", juice: "ジュース", fried_food: "揚げ物", kebab: "ケバブ", hot_pot: "鍋", shabu_shabu: "しゃぶしゃぶ", sukiyaki: "すき焼き", unagi: "うなぎ", oden: "おでん" };
+const FOODA = { restaurant: "レストラン", fast_food: "ファストフード", cafe: "カフェ", bar: "バー", pub: "居酒屋", food_court: "フードコート", ice_cream: "アイス", biergarten: "ビアガーデン" };
+const SHOPJ = { bakery: "パン屋", books: "本屋", clothes: "服", variety_store: "100円ショップ・雑貨", hardware: "ホームセンター", doityourself: "ホームセンター", electronics: "家電", mobile_phone: "携帯ショップ", laundry: "コインランドリー", dry_cleaning: "クリーニング", florist: "花屋", butcher: "精肉店", greengrocer: "八百屋", seafood: "鮮魚店", alcohol: "酒屋", confectionery: "お菓子", pastry: "ケーキ屋", optician: "眼鏡", bicycle: "自転車", car: "車", car_repair: "車の修理", furniture: "家具", shoes: "靴", toys: "おもちゃ", pet: "ペット", stationery: "文房具", tobacco: "たばこ", mall: "ショッピングセンター", department_store: "百貨店", rice: "米屋", tea: "お茶", coffee: "コーヒー豆", deli: "総菜", beverages: "飲み物", gift: "ギフト", jewelry: "アクセサリー", bag: "かばん", cosmetics: "化粧品", houseware: "日用品", interior_decoration: "インテリア", second_hand: "リサイクル", photo: "写真", travel_agency: "旅行", estate_agent: "不動産", funeral_directors: "葬儀", kiosk: "売店", sports: "スポーツ用品", music: "楽器・音楽", baby_goods: "ベビー用品", fabric: "手芸", hobby: "趣味", frame: "額縁", copyshop: "コピー", newsagent: "新聞", tailor: "仕立て", watches: "時計", computer: "パソコン", garden_centre: "園芸", farm: "直売所", frozen_food: "冷凍食品", chocolate: "チョコレート", dairy: "乳製品", wine: "ワイン", general: "よろず屋", outdoor: "アウトドア", motorcycle: "バイク", tyres: "タイヤ", lottery: "宝くじ", pawnbroker: "質屋", locksmith: "鍵", storage_rental: "トランクルーム" };
+
+function classify(t) {
+  const a = t.amenity, s = t.shop, l = t.leisure, h = t.healthcare, tr = t.tourism;
+  if (a && FOODA[a]) { const c = (t.cuisine || "").split(";")[0].trim(); return ["food", CUISINE[c] || FOODA[a]]; }
+  if (s === "supermarket" || s === "wholesale") return ["super", "スーパー"];
+  if (s === "convenience") return ["conv", "コンビニ"];
+  if (s === "chemist" || a === "pharmacy" || h === "pharmacy") return ["drug", a === "pharmacy" || h === "pharmacy" ? "薬局" : "ドラッグストア"];
+  if (a === "dentist" || h === "dentist") return ["dental", "歯科"];
+  if (a === "veterinary") return ["medical", "動物病院"];
+  if (a === "hospital" || a === "clinic" || a === "doctors" || h) return ["medical", a === "hospital" ? "病院" : "クリニック"];
+  if (a === "kindergarten" || a === "childcare") return ["nursery", a === "kindergarten" ? "幼稚園・保育園" : "保育"];
+  if (a === "school" || a === "college" || a === "university") return ["school", a === "university" ? "大学" : a === "college" ? "専門学校" : "学校"];
+  if (["music_school", "language_school", "driving_school", "prep_school", "dancing_school", "training", "tutoring"].includes(a) || t.office === "educational_institution") return ["lesson", { music_school: "音楽教室", language_school: "英会話・語学", driving_school: "自動車学校", prep_school: "塾", dancing_school: "ダンス", tutoring: "塾" }[a] || "教室"];
+  if (a === "social_facility" || a === "nursing_home" || a === "social_centre") return ["welfare", t["social_facility"] === "nursing_home" ? "介護施設" : "福祉施設"];
+  if (l === "park" || l === "playground" || l === "garden") return ["park", l === "playground" ? "遊び場" : "公園"];
+  if (s === "hairdresser" || s === "beauty" || s === "massage" || s === "nail_salon" || a === "spa") return ["beauty", { hairdresser: "美容院・理容", beauty: "エステ・美容", massage: "マッサージ・整体", nail_salon: "ネイル" }[s] || "美容"];
+  if (["bank", "atm", "post_office", "police", "townhall", "library", "fire_station", "courthouse", "community_centre", "public_building", "bureau_de_change", "money_transfer", "post_depot"].includes(a) || t.office === "government")
+    return ["public", { bank: "銀行", atm: "ATM", post_office: "郵便局", police: "交番・警察", townhall: "役所", library: "図書館", fire_station: "消防", community_centre: "公民館・集会所" }[a] || "公共施設"];
+  if (a === "place_of_worship") return ["temple", t.religion === "shinto" ? "神社" : t.religion === "buddhist" ? "お寺" : t.religion === "christian" ? "教会" : "宗教施設"];
+  if (l || tr || ["cinema", "karaoke_box", "theatre", "arts_centre", "events_venue", "public_bath", "studio", "nightclub", "casino", "gambling"].includes(a))
+    return ["life", tr === "hotel" || tr === "guest_house" || tr === "hostel" ? "宿泊" : { fitness_centre: "ジム", sports_centre: "スポーツ施設", swimming_pool: "プール", pitch: "グラウンド・コート", stadium: "スタジアム", bowling_alley: "ボウリング", amusement_arcade: "ゲームセンター" }[l] || { cinema: "映画館", karaoke_box: "カラオケ", public_bath: "銭湯", theatre: "劇場" }[a] || (tr === "museum" ? "博物館" : "施設")];
+  if (a === "fuel") return ["shop", "ガソリンスタンド"];
+  if (a === "car_wash") return ["shop", "洗車"];
+  if (a === "car_rental") return ["shop", "レンタカー"];
+  if (s) return ["shop", SHOPJ[s] || "お店"];
+  if (t.craft) return ["shop", "工房・職人"];
+  if (t.office) return null;
+  if (a) return ["public", "施設"];
+  return null;
+}
+function parseOSM(js) {
+  const out = [], seen = new Set();
+  let st = null;
+  (js.elements || []).forEach(e => {
+    const t = e.tags || {};
+    const lat = e.lat ?? (e.center && e.center.lat), lng = e.lon ?? (e.center && e.center.lon);
+    if (lat == null) return;
+    if ((t.railway === "station" || t.public_transport === "station") && false) { st = st || [lat, lng]; return; }
+    if (t.amenity && OSM_EXCLUDE.test(t.amenity)) return;
+    const name = t["name:ja"] || t.name || (t.brand ? t.brand + (t["branch"] ? " " + t.branch : "") : "");
+    if (!name) return;
+    const c = classify(t); if (!c) return;
+    const key = c[0] + "|" + norm(name) + "|" + lat.toFixed(3) + lng.toFixed(3);
+    if (seen.has(key)) return; seen.add(key);
+    const addr = [t["addr:city"], t["addr:quarter"] || t["addr:neighbourhood"], t["addr:block_number"] || t["addr:street"], t["addr:housenumber"]].filter(Boolean).join("");
+    out.push({ id: "o" + e.type[0] + e.id, src: "osm", g: c[0], sub: c[1], name: (t.branch && t.name && !t.name.includes(t.branch) ? t.name + " " + t.branch : name).slice(0, 80),
+      addr: addr.replace(/^(兵庫県)?宝塚市/, ""), lat: +lat.toFixed(6), lng: +lng.toFixed(6), hours: (t.opening_hours || "").slice(0, 120), phone: (t.phone || t["contact:phone"] || "").split(";")[0].slice(0, 30),
+      web: (t.website || t["contact:website"] || "").slice(0, 200), fam: "", note: "", dist: "" });
+  });
+  return { items: out, station: st };
+}
+let osmLoading = false;
+async function loadOSM(force) {
+  if (osmLoading) return;
+  if (!force && OSM.length && Date.now() - osmTime < 30 * 864e5) return;
+  osmLoading = true; refreshStatus();
+  const [la, lo] = STATION, r = 1600;
+  const q = `[out:json][timeout:90];(nwr(around:${r},${la},${lo})["amenity"]["name"];nwr(around:${r},${la},${lo})["shop"];nwr(around:${r},${la},${lo})["leisure"~"park|playground|garden|fitness_centre|sports_centre|swimming_pool|pitch|stadium|bowling_alley|amusement_arcade"]["name"];nwr(around:${r},${la},${lo})["healthcare"]["name"];nwr(around:${r},${la},${lo})["tourism"~"hotel|guest_house|hostel|museum|attraction"]["name"];nwr(around:${r},${la},${lo})["office"="educational_institution"]["name"];nwr(around:${r},${la},${lo})["craft"]["name"];);out center tags;`;
+  const eps = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
+  let ok = false;
+  for (const ep of eps) {
+    try {
+      const res = await fetch(ep, { method: "POST", body: "data=" + encodeURIComponent(q), headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+      if (!res.ok) continue;
+      const { items, station } = parseOSM(await res.json());
+      if (!items.length) continue;
+      
+      OSM = items; osmTime = Date.now();
+      store.set("akura-osm-v3", { t: osmTime, items: OSM });
+      ok = true; break;
+    } catch (e) { /* 次のサーバーを試す */ }
+  }
+  osmLoading = false;
+  rebuild(); refreshStatus();
+  if (!ok) toast("地図データを読み込めませんでした。電波のある所で「最新に更新」を押してください");
+  if (current === "home") renderHome(); if (current === "search") listSearch(); if (current === "map") drawPins();
+}
+function refreshStatus() {
+  const nOsm = ITEMS.filter(f => f.src === "osm").length, nChk = ITEMS.length - nOsm;
+  const d = osmTime ? new Date(osmTime) : null;
+  const txt = osmLoading ? "安倉北から1.5km圏のお店・施設を読み込んでいます…" :
+    `出典で確認した施設 ${nChk}件＋地図データ ${nOsm}件` + (d ? `（${d.getMonth() + 1}/${d.getDate()}更新）` : "（未取得）");
+  $$(".dataStatus").forEach(e => e.textContent = txt);
+}
+
+/* ---------- お気に入り ---------- */
+function favs() {
+  const mine = store.get("akura-favs-v3", null);
+  if (mine) return mine;
+  const init = (store.get("akura-guide-v1", { favorites: [] }).favorites || []);
+  store.set("akura-favs-v3", init); return init;
+}
+function toggleFav(id) {
+  const list = favs(), on = !list.includes(id);
+  store.set("akura-favs-v3", on ? [...list, id] : list.filter(x => x !== id));
+  const b = document.querySelector(`#bookView [data-fav="${id}"]`);   // ガイドブックの★もそろえる
+  if (b && (b.getAttribute("aria-pressed") === "true") !== on) b.click();
+  return on;
+}
+
+/* ---------- 画面の切り替え ---------- */
+const VIEWS = ["home", "search", "map", "events", "book"];
+let current = "home";
+function show(v, opt = {}) {
+  current = v;
+  VIEWS.forEach(x => { $("#" + x + "View").hidden = x !== v; });
+  $$(".tabs button").forEach(b => b.setAttribute("aria-current", b.dataset.v === v ? "page" : "false"));
+  $("#appTitle").textContent = { home: "安倉北ガイド", search: "さがす", map: "地図", events: "行事カレンダー", book: "ガイドブック" }[v];
+  if (v === "home") renderHome();
+  if (v === "search") renderSearch(opt);
+  if (v === "map") openMap(opt);
+  if (v === "events") renderEvents();
+  if (opt.anchor) { const el = document.getElementById(opt.anchor); if (el) { el.scrollIntoView(); return; } }
+  if (!opt.keepScroll) window.scrollTo(0, 0);
+}
+
+/* ---------- ホーム ---------- */
+function renderHome() {
+  const h = new Date().getHours();
+  $("#helloMsg").textContent = h < 11 ? "おはようございます" : h < 17 ? "こんにちは" : "こんばんは";
+  $("#homeTiles").innerHTML = GROUPS.map(g => {
+    const n = ITEMS.filter(f => f.g === g.key && (f.d == null || f.d <= 1500)).length;
+    return `<button class="tile" data-g="${g.key}"><span class="em">${g.em}</span>${esc(g.label)}<small>${n}件</small></button>`;
+  }).join("");
+  $$("#homeTiles .tile").forEach(b => b.onclick = () => show("search", { group: b.dataset.g }));
+  const up = upcoming(3);
+  $("#homeEvents").innerHTML = up.length ? up.map(evCard).join("") : `<p class="empty">予定はまだありません</p>`;
+  bindEvCards($("#homeEvents"));
+  const fv = favs().map(id => ITEMS.find(f => f.id === id)).filter(Boolean);
+  $("#homeFavs").innerHTML = fv.length ? fv.map(fCard).join("") : `<p class="card" style="color:var(--a-muted);font-size:.88rem">お店や施設の ☆ を押すと、ここにまとまります。</p>`;
+  bindFCards($("#homeFavs"));
+  refreshStatus();
+}
+
+/* ---------- さがす ---------- */
+const sstate = { q: "", group: "", fam: "", favOnly: false, range: 1500, sub: "", limit: 40 };
+function renderSearch(opt = {}) {
+  if (opt.group !== undefined) { sstate.group = opt.group; sstate.fam = opt.fam || ""; sstate.q = ""; $("#q").value = ""; sstate.favOnly = false; sstate.sub = ""; }
+  if (opt.fam) sstate.fam = opt.fam;
+  sstate.limit = 40;
+  $("#groupChips").innerHTML = `<select class="bigsel" id="groupSel" aria-label="種類"><option value="">🔎 すべての種類</option>` +
+    GROUPS.map(g => `<option value="${g.key}" ${sstate.group === g.key ? "selected" : ""}>${g.em} ${esc(g.label)}</option>`).join("") + `</select>`;
+  $("#rangeChips").innerHTML = RANGES.map(r => `<button data-r="${r}" aria-pressed="${sstate.range === r}">安倉北から${r === 1500 ? "1.5km" : r >= 1000 ? r / 1000 + "km" : r + "m"}</button>`).join("") +
+    `<button data-favonly="1" aria-pressed="${sstate.favOnly}">★ お気に入り</button>`;
+  $("#famChips").innerHTML = FAM.map(x => `<button data-f="${x.key}" aria-pressed="${sstate.fam === x.key}">${x.label}</button>`).join("");
+  $("#famChips").hidden = !!sstate.group && !["school", "nursery", "lesson", "welfare", "park", "medical", "dental"].includes(sstate.group);
+  $("#groupSel").onchange = e => { sstate.group = e.target.value; sstate.sub = ""; renderSearch(); };
+  $$("#rangeChips button").forEach(b => b.onclick = () => { if (b.dataset.favonly) sstate.favOnly = !sstate.favOnly; else sstate.range = +b.dataset.r; renderSearch(); });
+  $$("#famChips button").forEach(b => b.onclick = () => { sstate.fam = sstate.fam === b.dataset.f ? "" : b.dataset.f; renderSearch(); });
+  listSearch();
+}
+function filtered() {
+  const q = sstate.q.trim().toLowerCase(), fv = favs();
+  const g = q ? "" : sstate.group;
+  return ITEMS.filter(f => (!g || f.g === g) && (q || !sstate.fam || (f.fam || "").split(" ").includes(sstate.fam)) &&
+    (!sstate.sub || f.sub === sstate.sub) && (!sstate.favOnly || fv.includes(f.id)) &&
+    (f.d == null ? sstate.range >= 1500 : f.d <= sstate.range + (f.approx && f.src !== "osm" ? 250 : 0)) &&
+    (!q || (f.name + " " + (f.addr || "") + " " + (f.note || "") + " " + (f.sub || "") + " " + groupOf(f).label).toLowerCase().includes(q)));
+}
+function listSearch() {
+  const hits = filtered().sort((a, b) => (a.d ?? 99999) - (b.d ?? 99999));
+  const g = GMAP[sstate.group];
+  // 種類の中の細かい分類（ラーメン、カフェ など）
+  let subs = "";
+  if (g && !sstate.q) {
+    const cnt = {}; ITEMS.filter(f => f.g === g.key).forEach(f => { if (f.sub) cnt[f.sub] = (cnt[f.sub] || 0) + 1; });
+    const keys = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+    if (keys.length > 1) subs = `<div class="chips" id="subChips"><button data-s="" aria-pressed="${!sstate.sub}">ぜんぶ</button>` + keys.slice(0, 24).map(k => `<button data-s="${esc(k)}" aria-pressed="${sstate.sub === k}">${esc(k)}（${cnt[k]}）</button>`).join("") + `</div>`;
+  }
+  $("#count").textContent = `${hits.length}件` + (sstate.q ? "（すべての種類から）" : "") + "・安倉北から近い順";
+  const more = `<a class="more-g" href="${gmap("宝塚市 安倉北 周辺 " + (g ? g.g : "お店"))}" target="_blank" rel="noopener">🔎 Googleマップで安倉北まわりの${esc(g ? g.label : "お店")}を見る ↗</a>`;
+  const shown = hits.slice(0, sstate.limit);
+  $("#results").innerHTML = subs + (shown.length ? shown.map(fCard).join("") : `<p class="empty">見つかりませんでした</p>`) +
+    (hits.length > shown.length ? `<button class="addbtn" id="moreBtn">もっと見る（あと${hits.length - shown.length}件）</button>` : "") + more;
+  $$("#subChips button").forEach(b => b.onclick = () => { sstate.sub = b.dataset.s; sstate.limit = 40; listSearch(); });
+  const mb = $("#moreBtn"); if (mb) mb.onclick = () => { sstate.limit += 60; listSearch(); };
+  bindFCards($("#results"));
+}
+function fCard(f) {
+  const g = groupOf(f), on = favs().includes(f.id);
+  const dist = f.d != null ? `${f.ref ? f.ref + "から" : "安倉北から"}${f.approx && f.src !== "osm" || f.ref ? "約" : ""}${f.d >= 1000 ? (f.d / 1000).toFixed(1) + "km" : f.d + "m"}` : "";
+  const addr = f.addr && !/詳細位置/.test(f.addr) ? f.addr : "";
+  const srcChip = f.src === "osm" ? `<span class="chip" style="background:#f1f1ee;color:#6b6b60">地図データ</span>` : `<span class="chip" style="background:#e3f4e4;color:#246b2c">確認済み</span>`;
+  return `<article class="card fcard" data-id="${f.id}">
+    <h3><span class="nm">${g.em} ${esc(f.name)}</span><button class="star" data-star="${f.id}" aria-pressed="${on}" aria-label="${esc(f.name)}をお気に入り${on ? "から外す" : "に追加"}">${on ? "★" : "☆"}</button></h3>
+    <span class="chip">${esc(f.sub || g.label)}</span>${dist ? `<span class="chip">${dist}</span>` : ""}${(f.fam || "").includes("free") ? `<span class="chip">無料</span>` : ""}${srcChip}
+    ${addr ? `<p class="addr">📍 ${esc(addr)}</p>` : ""}
+    ${f.note ? `<p class="note">${esc(f.note)}</p>` : ""}
+    ${f.hours ? `<p class="note" style="color:var(--a-muted)">🕘 ${esc(f.hours)}（地図データの情報。変わっていることがあります）</p>` : ""}
+    <div class="acts">
+      <a class="primary" href="${gmapOf(f)}" target="_blank" rel="noopener">Googleマップ</a>
+      <a href="${groute(f)}" target="_blank" rel="noopener">歩いて行く</a>
+      ${f.phone ? `<a href="tel:${esc(f.phone.replace(/[^0-9+]/g, ""))}">電話</a>` : f.url || f.web ? `<a href="${esc(f.url || f.web)}" target="_blank" rel="noopener">公式・案内</a>` : f.lat ? `<button data-pin="${f.id}">地図で見る</button>` : `<a href="${gmap(fq(f))}" target="_blank" rel="noopener">場所を探す</a>`}
+    </div></article>`;
+}
+function bindFCards(root) {
+  $$("[data-star]", root).forEach(b => b.onclick = () => { const on = toggleFav(b.dataset.star); b.textContent = on ? "★" : "☆"; b.setAttribute("aria-pressed", on); toast(on ? "お気に入りに追加しました" : "お気に入りから外しました"); });
+  $$("[data-pin]", root).forEach(b => b.onclick = () => show("map", { focus: b.dataset.pin }));
+}
+
+/* ---------- 地図（Leaflet＋国土地理院の地図） ---------- */
+let map, layer, stMarker, mfilter = "", geocoding = false, meMarker, circle;
+function openMap(opt = {}) {
+  if (!window.L) { $("#map").innerHTML = `<p class="empty">地図を読み込めませんでした。電波のある所で開き直してください。</p>`; return; }
+  if (!map) {
+    map = L.map("map", { preferCanvas: true }).setView(STATION, 15);
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", { maxZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>｜施設：<a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a>' }).addTo(map);
+    circle = L.circle(STATION, { radius: 1500, color: "#23657b", weight: 1.5, fill: false, dashArray: "6 6" }).addTo(map);
+    stMarker = L.marker(STATION, { icon: L.divIcon({ className: "", html: `<div class="pin station"><span>🏠 安倉北</span></div>`, iconSize: [76, 24], iconAnchor: [38, 12] }), zIndexOffset: 1000 }).addTo(map);
+    layer = L.layerGroup().addTo(map);
+    $("#mapChips").innerHTML = `<select class="bigsel" id="mapSel" aria-label="地図に出す種類"><option value="">🗺️ すべての種類を表示</option>` + GROUPS.map(g => `<option value="${g.key}">${g.em} ${esc(g.label)}</option>`).join("") + `</select>`;
+    $("#mapSel").onchange = e => { mfilter = e.target.value; drawPins(); };
+    $("#legend").innerHTML = GROUPS.map(g => `<span><i style="background:${g.color}"></i>${esc(g.label)}</span>`).join("");
+    $("#locBtn").onclick = locateMe;
+    $("#fitBtn").onclick = () => map.fitBounds(circle.getBounds());
+  }
+  setTimeout(() => { map.invalidateSize(); drawPins(); if (opt.focus) focusPin(opt.focus); }, 60);
+  geocodeAll();
+}
+function popupHtml(f) {
+  const g = groupOf(f);
+  return `<b>${g.em} ${esc(f.name)}</b><br><span style="color:#5d7380">${esc(f.sub || g.label)}${f.addr && !/詳細位置/.test(f.addr) ? "・" + esc(f.addr) : ""}${f.d != null ? (f.ref ? "・" + f.ref + "から約" : "・安倉北から") + (f.d >= 1000 ? (f.d / 1000).toFixed(1) + "km" : f.d + "m") : ""}</span>${f.note ? `<br>${esc(f.note)}` : ""}${f.hours ? `<br><span style="color:#5d7380">🕘 ${esc(f.hours)}</span>` : ""}
+    <div class="pop-acts"><a class="primary" href="${gmapOf(f)}" target="_blank" rel="noopener">Googleマップ</a><a href="${groute(f)}" target="_blank" rel="noopener">歩いて行く</a>${f.phone ? `<a href="tel:${esc(f.phone.replace(/[^0-9+]/g, ""))}">電話</a>` : ""}</div>`;
+}
+function drawPins() {
+  if (!layer) return;
+  stMarker.setLatLng(STATION); circle.setLatLng(STATION);
+  layer.clearLayers();
+  let n = 0, missing = 0;
+  ITEMS.forEach(f => {
+    if (mfilter && f.g !== mfilter) return;
+    if (!f.lat) { missing++; return; }
+    n++;
+    const g = groupOf(f), chk = f.src !== "osm";
+    const m = L.circleMarker([f.lat, f.lng], { radius: chk ? 8 : 6.5, color: "#fff", weight: chk ? 2.5 : 1.5, fillColor: g.color, fillOpacity: .92 });
+    m.bindPopup(() => popupHtml(f), { maxWidth: 280 });
+    m._fid = f.id; m.addTo(layer);
+  });
+  $("#mapStatus").textContent = osmLoading ? "お店・施設を読み込んでいます…" : geocoding ? "位置を調べています…" :
+    `${n}件を表示` + (missing ? `（位置が分からない${missing}件は「さがす」から）` : "");
+}
+function focusPin(id) {
+  const f = ITEMS.find(x => x.id === id);
+  if (f && f.lat) { map.setView([f.lat, f.lng], 17); layer.eachLayer(m => { if (m._fid === id) m.openPopup(); }); }
+  else if (f) window.open(gmapOf(f), "_blank");
+}
+async function geocodeOne(f) {
+  const addr = f.addr.replace(/\s.*$/, "").replace(/[（(].*$/, "");
+  const r = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent((/^(宝塚市|伊丹市|川西市)/.test(addr) ? "兵庫県" : "兵庫県宝塚市") + addr));
+  if (!r.ok) throw new Error("http " + r.status);
+  const js = await r.json();
+  const town = addr.replace(/[0-9０-９\-－丁目番地号].*$/, "");
+  const hit = js.find(x => x.properties && x.properties.title && /宝塚市|伊丹市|川西市/.test(x.properties.title) && (!town || x.properties.title.includes(town)));
+  if (!hit) return "x";
+  const [lng, lat] = hit.geometry.coordinates;
+  if (distM(STATION, [lat, lng]) > 4000) return "x";
+  return [lat, lng];
+}
+async function geocodeAll() {
+  // 番地まで分かる施設だけ、国土地理院の住所検索でピンの位置を細かくする（町名だけのものは町の中心に置く）
+  if (geocoding) return;
+  const todo = BASE.filter(f => geo[f.id] === undefined && f.addr && /\d/.test(f.addr) && !/詳細位置/.test(f.addr));
+  if (!todo.length) return;
+  geocoding = true; drawPins();
+  let fails = 0;
+  for (let i = 0; i < todo.length; i += 4) {
+    await Promise.all(todo.slice(i, i + 4).map(async f => { try { geo[f.id] = await geocodeOne(f); } catch (e) { fails++; } }));
+    store.set("akura-geo-v1", geo);
+    if (fails > 6) break;
+  }
+  geocoding = false; rebuild();
+  if (current === "map") drawPins();
+}
+function locateMe() {
+  if (!navigator.geolocation) return toast("この端末では現在地を使えません");
+  navigator.geolocation.getCurrentPosition(p => {
+    const ll = [p.coords.latitude, p.coords.longitude];
+    if (meMarker) meMarker.setLatLng(ll); else meMarker = L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="pin me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }) }).addTo(map);
+    map.setView(ll, 16);
+  }, () => toast("現在地を取得できませんでした（設定で位置情報の許可が必要です）"), { enableHighAccuracy: true, timeout: 10000 });
+}
+
+/* ---------- 行事カレンダー ---------- */
+const WD = ["日", "月", "火", "水", "木", "金", "土"];
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+let calY, calM, calSel = null;
+function allEvents() {
+  const y = new Date().getFullYear();
+  const regional = buildRegionalEvents(y - 1, y + 1);
+  const mine = store.get("akura-my-events", []).map(e => ({ ...e, status: "じぶん", end: e.end || e.start }));
+  return regional.concat(mine).sort((a, b) => a.start.localeCompare(b.start) || (a.time || "").localeCompare(b.time || ""));
+}
+function upcoming(n) { const t = todayStr(); return allEvents().filter(e => e.end >= t).slice(0, n); }
+function evOn(day) { return allEvents().filter(e => e.start <= day && e.end >= day); }
+function fmtRange(e) {
+  const d = s => { const [y, m, dd] = s.split("-").map(Number); const w = WD[new Date(y, m - 1, dd).getDay()]; return `${m}/${dd}(${w})`; };
+  return (e.start === e.end ? d(e.start) : d(e.start) + "〜" + d(e.end)) + (e.time ? " " + e.time : "");
+}
+function evCard(e) {
+  const [y, m, d] = e.start.split("-").map(Number);
+  const w = WD[new Date(y, m - 1, d).getDay()];
+  return `<article class="card ev" data-ev="${esc(e.id)}"><div class="date"><small>${m}月</small><b>${d}</b><small>${w}</small></div><div class="body">
+    <h3>${esc(e.title)}<span class="st ${e.status}">${e.status === "じぶん" ? "わが家" : e.status}</span></h3>
+    <p>🗓 ${fmtRange(e)}${e.place ? `<br>📍 ${esc(e.place)}` : ""}</p>
+    ${e.note ? `<p>${esc(e.note)}</p>` : ""}
+    <div class="acts">
+      <a class="primary" href="${gcal(e)}" target="_blank" rel="noopener">Googleカレンダーに追加</a>
+      ${e.status === "じぶん" ? `<button data-edit="${esc(e.id)}">編集・削除</button>` : `<button data-share="${esc(e.id)}">家族に送る</button>`}
+      ${e.place ? `<a href="${gmap((e.status === "じぶん" ? "" : "宝塚市 ") + e.place)}" target="_blank" rel="noopener">場所を地図で</a>` : ""}
+      ${e.src ? `<a href="${esc(e.src)}" target="_blank" rel="noopener">出典・詳しく</a>` : e.status === "じぶん" ? `<button data-share="${esc(e.id)}">家族に送る</button>` : ""}
+    </div></div></article>`;
+}
+function bindEvCards(root) {
+  $$("[data-share]", root).forEach(b => b.onclick = () => shareEv(allEvents().find(e => e.id === b.dataset.share)));
+  $$("[data-edit]", root).forEach(b => b.onclick = () => openSheet(store.get("akura-my-events", []).find(e => e.id === b.dataset.edit)));
+}
+function gcal(e) {
+  const nx = s => { const [y, m, d] = s.split("-").map(Number); const t = new Date(y, m - 1, d + 1); return `${t.getFullYear()}${String(t.getMonth() + 1).padStart(2, "0")}${String(t.getDate()).padStart(2, "0")}`; };
+  let dates = e.start.replace(/-/g, "") + "/" + nx(e.end);
+  const tm = (e.time || "").match(/^(\d{1,2}):(\d{2})(?:\s*[〜~-]\s*(\d{1,2}):(\d{2}))?/);
+  if (tm) {
+    const d = e.start.replace(/-/g, ""), p = x => String(x).padStart(2, "0");
+    const eh = tm[3] ? +tm[3] : Math.min(23, +tm[1] + 1), em = tm[3] ? tm[4] : tm[2];
+    dates = `${d}T${p(tm[1])}${tm[2]}00/${(e.end || e.start).replace(/-/g, "")}T${p(eh)}${em}00`;
+  }
+  const details = [e.note, e.src ? "出典: " + e.src : "", e.status === "目安" ? "※日付は目安。公式の発表で確認してください。" : ""].filter(Boolean).join("\n");
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE&ctz=Asia/Tokyo&text=" + encodeURIComponent(e.title) + "&dates=" + dates +
+    "&details=" + encodeURIComponent(details) + "&location=" + encodeURIComponent(e.place || "");
+}
+async function shareEv(e) {
+  if (!e) return;
+  const text = `【${e.title}】\n${fmtRange(e)}${e.place ? "\n場所：" + e.place : ""}${e.note ? "\n" + e.note : ""}${e.status === "目安" ? "\n※日付は目安" : ""}`;
+  try { if (navigator.share) { await navigator.share({ text }); return; } } catch (err) { return; }
+  try { await navigator.clipboard.writeText(text); toast("コピーしました。LINEなどに貼り付けてください"); } catch (err) { toast("共有できませんでした"); }
+}
+function renderEvents() {
+  const now = new Date();
+  if (calY === undefined) { calY = now.getFullYear(); calM = now.getMonth(); }
+  $("#calTitle").textContent = `${calY}年${calM + 1}月`;
+  const first = new Date(calY, calM, 1), start = new Date(calY, calM, 1 - first.getDay());
+  const t = todayStr(), evs = allEvents();
+  let html = WD.map((w, i) => `<div class="dow ${i === 0 ? "sun" : i === 6 ? "sat" : ""}">${w}</div>`).join("");
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (i >= 35 && d.getMonth() !== calM) break;
+    const on = evs.filter(e => e.start <= ds && e.end >= ds);
+    html += `<button class="d ${d.getMonth() !== calM ? "out" : ""} ${ds === t ? "today" : ""} ${ds === calSel ? "sel" : ""} ${d.getDay() === 0 ? "sun" : d.getDay() === 6 ? "sat" : ""}" data-day="${ds}" aria-label="${d.getMonth() + 1}月${d.getDate()}日 ${on.length ? on.length + "件の予定" : "予定なし"}">
+      <span class="n">${d.getDate()}</span><span class="dots">${on.slice(0, 3).map(e => `<i class="${e.status === "じぶん" ? "mine" : ""}"></i>`).join("")}</span></button>`;
+  }
+  $("#cal").innerHTML = html;
+  $$("#cal .d").forEach(b => b.onclick = () => { calSel = calSel === b.dataset.day ? null : b.dataset.day; renderEvents(); });
+  let list;
+  if (calSel) {
+    list = evOn(calSel);
+    const [y, m, d] = calSel.split("-").map(Number);
+    $("#evListTitle").textContent = `${m}月${d}日の予定`;
+  } else {
+    const ms = `${calY}-${String(calM + 1).padStart(2, "0")}`;
+    list = evs.filter(e => e.start.slice(0, 7) <= ms && e.end.slice(0, 7) >= ms);
+    $("#evListTitle").textContent = `${calM + 1}月の予定`;
+  }
+  $("#evList").innerHTML = list.length ? list.map(evCard).join("") : `<p class="empty">この${calSel ? "日" : "月"}の行事は登録されていません。<br>下の「公式の最新情報」も見てください。</p>`;
+  bindEvCards($("#evList"));
+  $("#offLinks").innerHTML = officialEventLinks(now).map(l => `<a href="${l.url}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("");
+}
+function openSheet(ev) {
+  const e = ev || { id: "", title: "", start: calSel || todayStr(), end: "", time: "", place: "", note: "" };
+  $("#sheetTitle").textContent = ev ? "わが家の予定を編集" : "わが家の予定を追加";
+  $("#fTitle").value = e.title; $("#fStart").value = e.start; $("#fEnd").value = e.end && e.end !== e.start ? e.end : "";
+  $("#fTime").value = e.time || ""; $("#fPlace").value = e.place || ""; $("#fNote").value = e.note || "";
+  $("#fDel").hidden = !ev; $("#sheet").hidden = false; $("#sheet").dataset.id = e.id;
+  setTimeout(() => $("#fTitle").focus(), 50);
+}
+function saveSheet() {
+  const title = $("#fTitle").value.trim(), start = $("#fStart").value;
+  if (!title || !start) return toast("タイトルと日付を入れてください");
+  let end = $("#fEnd").value || start; if (end < start) end = start;
+  const list = store.get("akura-my-events", []), id = $("#sheet").dataset.id || "my-" + Date.now();
+  const item = { id, title: title.slice(0, 80), start, end, time: $("#fTime").value.trim().slice(0, 30), place: $("#fPlace").value.trim().slice(0, 80), note: $("#fNote").value.trim().slice(0, 400), kind: "わが家" };
+  const i = list.findIndex(x => x.id === id); if (i >= 0) list[i] = item; else list.push(item);
+  store.set("akura-my-events", list); $("#sheet").hidden = true; calSel = start;
+  const [y, m] = start.split("-").map(Number); calY = y; calM = m - 1;
+  toast("保存しました"); show("events", { keepScroll: true });
+}
+function deleteSheet() {
+  const id = $("#sheet").dataset.id;
+  store.set("akura-my-events", store.get("akura-my-events", []).filter(x => x.id !== id));
+  $("#sheet").hidden = true; toast("削除しました"); renderEvents();
+}
+
+/* ---------- その他 ---------- */
+let tt;
+function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 2600); }
+function setBig(on) { document.documentElement.classList.toggle("big", on); store.set("akura-big", on); $("#bigBtn").textContent = on ? "文字 小" : "文字 大"; }
+
+function init() {
+  document.body.classList.add("app");
+  $$(".tabs button").forEach(b => b.onclick = () => show(b.dataset.v));
+  $("#q").addEventListener("input", e => { sstate.q = e.target.value; listSearch(); });
+  $("#prevM").onclick = () => { calM--; if (calM < 0) { calM = 11; calY--; } calSel = null; renderEvents(); };
+  $("#nextM").onclick = () => { calM++; if (calM > 11) { calM = 0; calY++; } calSel = null; renderEvents(); };
+  $("#todayM").onclick = () => { const n = new Date(); calY = n.getFullYear(); calM = n.getMonth(); calSel = todayStr(); renderEvents(); };
+  $("#addEv").onclick = () => openSheet(null);
+  $("#fCancel").onclick = () => $("#sheet").hidden = true;
+  $("#fSave").onclick = saveSheet; $("#fDel").onclick = deleteSheet;
+  $("#sheet").addEventListener("click", e => { if (e.target.id === "sheet") $("#sheet").hidden = true; });
+  $("#bigBtn").onclick = () => setBig(!document.documentElement.classList.contains("big"));
+  setBig(!!store.get("akura-big", false));
+  $$("[data-go]").forEach(b => b.onclick = () => {
+    const [v, a] = b.dataset.go.split("#");
+    if (v === "search") show("search", { group: "", fam: a }); else show(v, { anchor: a });
+  });
+  // ガイドブックの表に、見出しをラベルとして付ける（スマホでは縦に並べるため）
+  $$("#bookView table").forEach(t => {
+    const heads = $$("thead th", t).map(th => th.textContent.trim());
+    if (!heads.length) return;
+    $$("tbody tr", t).forEach(tr => Array.from(tr.children).forEach((c, i) => { if (!c.hasAttribute("data-label") && heads[i]) c.setAttribute("data-label", heads[i]); }));
+  });
+  $$("#bookView .table-wrap").forEach(w => { w.removeAttribute("tabindex"); if (/横にスクロール/.test(w.getAttribute("aria-label") || "")) w.setAttribute("aria-label", "施設一覧"); });
+  
+  rebuild(); refreshStatus();
+  $$(".osmRefresh").forEach(b => b.onclick = () => loadOSM(true));
+  show("home");
+  loadOSM(false);
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+
+</script>
+<script>
+(()=>{try{const sa=navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;if(!sa&&/iPhone|iPad|iPod/.test(navigator.userAgent))document.getElementById("installCard").hidden=false;}catch(e){}
+if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}})();
+</script>
+</body>
+</html>
